@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackMate | Personal Study & Habit Tracker</title>
+    <style>
+        :root, html, body {
+            background-color: #0B0A10 !important;
+            color: #F5F3FF !important;
+            color-scheme: dark;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/_aistudio-iframe.js?v=6634132a"></script></head>
+<body class="theme-dark">
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="logo-icon">⚡</span>
+                </div>
+                <div class="brand-text">
+                    <h1>TrackMate</h1>
+                    <span class="tagline">Focus • Track • Build</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="sessions">
+                    <span class="icon">⏱️</span>
+                    <span>Study Sessions</span>
+                </button>
+                <button class="nav-item" data-tab="habits">
+                    <span class="icon">✅</span>
+                    <span>Daily Habits</span>
+                </button>
+                <button class="nav-item" data-tab="planner">
+                    <span class="icon">📋</span>
+                    <span>Study Planner</span>
+                </button>
+                <button class="nav-item" data-tab="pomodoro">
+                    <span class="icon">🍅</span>
+                    <span>Pomodoro Timer</span>
+                </button>
+                <button class="nav-item" data-tab="analytics">
+                    <span class="icon">📈</span>
+                    <span>Subject Analytics</span>
+                </button>
+                <button class="nav-item" data-tab="calendar">
+                    <span class="icon">📅</span>
+                    <span>Study Calendar</span>
+                </button>
+                <button class="nav-item" data-tab="goals">
+                    <span class="icon">🎯</span>
+                    <span>Goals & Badges</span>
+                </button>
+                <button class="nav-item" data-tab="exams">
+                    <span class="icon">🎓</span>
+                    <span>Exams & Notes</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge" id="sidebarUserProfile" title="Logged in student profile">
+                    <div class="user-avatar" id="sidebarUserAvatar">{% if session.get('user_name') %}{{ session.get('user_name')[:2].upper() }}{% elif user_name %}{{ user_name[:2].upper() }}{% else %}TM{% endif %}</div>
+                    <div class="user-meta">
+                        <span class="user-name" id="sidebarUserName">{{ session.get('user_name') or user_name or 'Student' }}</span>
+                        <span class="user-email" id="sidebarUserEmail">{{ session.get('user_email') or user_email or '' }}</span>
+                    </div>
+                </div>
+                <div class="quick-stats-pill">
+                    <span class="flame-icon">🔥</span>
+                    <span id="sidebarStreakText">Streak: 0 days</span>
+                </div>
+                <div class="sidebar-actions-row">
+                    <button id="btnExportData" class="btn-subtle" title="Export CSV data">
+                        <span>📥 CSV</span>
+                    </button>
+                    <a href="{{ url_for('logout') }}" id="btnLogout" class="btn-subtle btn-logout" title="Sign out of TrackMate">
+                        <span>🚪 Sign Out</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <div class="header-welcome">
+                    <h2 id="headerGreeting">Welcome back{% if session.get('user_name') or user_name %}, {{ (session.get('user_name') or user_name).split(' ')[0] }}{% else %}, Student{% endif %}</h2>
+                    <p class="subtitle" id="headerDateString">Loading date...</p>
+                </div>
+                <div class="header-actions">
+                    <div class="timer-pill-preview" id="topTimerPreview">
+                        <span class="timer-dot"></span>
+                        <span id="topTimerDisplay">25:00</span>
+                    </div>
+                    <button class="btn-primary" id="btnOpenNewSession">
+                        <span>+ Log Session</span>
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="btn-logout-header" title="Sign out" aria-label="Sign out">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Alerts Container -->
+            <div id="toastContainer" class="toast-container"></div>
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Study Sessions</span>
+                            <span class="stat-icon">📚</span>
+                        </div>
+                        <div class="stat-value" id="statTotalSessions">0</div>
+                        <span class="stat-caption">Recorded deep work logs</span>
+                    </div>
+
+                    <div class="stat-card stat-card-highlight">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Study Hours</span>
+                            <span class="stat-icon">⏱️</span>
+                        </div>
+                        <div class="stat-value" id="statTotalHours">0.0h</div>
+                        <span class="stat-caption" id="statHoursSubtitle">0 min total</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Active Habits</span>
+                            <span class="stat-icon">🌱</span>
+                        </div>
+                        <div class="stat-value" id="statActiveHabits">0</div>
+                        <span class="stat-caption">Routines tracked</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Habits Completed Today</span>
+                            <span class="stat-icon">🎯</span>
+                        </div>
+                        <div class="stat-value" id="statHabitsDone">0 / 0</div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill" id="statHabitProgressFill" style="width: 0%"></div>
+                        </div>
+                        <span class="stat-caption" id="statHabitPct">0% daily completion</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-columns">
+                    <!-- Left: Recent sessions & Habits Quick Check -->
+                    <div class="dash-col">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>⚡ Today's Habits Check-off</h3>
+                                <span class="badge" id="habitDateBadge">Today</span>
+                            </div>
+                            <div id="dashboardHabitsList" class="habits-checklist">
+                                <p class="empty-state">Loading habits...</p>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>🕒 Recent Study Sessions</h3>
+                                <button class="btn-link" id="linkViewAllSessions">View All →</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Subject</th>
+                                            <th>Topic</th>
+                                            <th>Duration</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentSessionsTableBody">
+                                        <tr><td colspan="5" class="text-center">Loading recent sessions...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Weekly chart & Goals summary -->
+                    <div class="dash-col">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>📊 Weekly Study Trend (Last 7 Days)</h3>
+                            </div>
+                            <div class="chart-box">
+                                <canvas id="weeklyChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>🎯 Goal Pacing & Next Exam</h3>
+                            </div>
+                            <div id="dashGoalWidgets">
+                                <div class="goal-item">
+                                    <div class="goal-top">
+                                        <span>Daily Study Target (4h)</span>
+                                        <span id="dashDailyGoalPct">0%</span>
+                                    </div>
+                                    <div class="progress-bar-wrap">
+                                        <div class="progress-bar-fill" id="dashDailyGoalBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="goal-item">
+                                    <div class="goal-top">
+                                        <span>Weekly Study Target (25h)</span>
+                                        <span id="dashWeeklyGoalPct">0%</span>
+                                    </div>
+                                    <div class="progress-bar-wrap">
+                                        <div class="progress-bar-fill" id="dashWeeklyGoalBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="dashUpcomingExamNotice" class="exam-notice-card">
+                                <span class="exam-bell">🔔</span>
+                                <div id="dashExamNoticeContent">
+                                    <strong>No urgent exams</strong>
+                                    <p>Stay on track with daily revision.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: STUDY SESSIONS (CRUD) -->
+            <section id="tab-sessions" class="tab-pane">
+                <div class="panel session-form-panel">
+                    <div class="panel-header">
+                        <h3 id="sessionFormHeading">Add New Study Session</h3>
+                        <button id="btnCancelEditSession" class="btn-subtle" style="display: none;">Cancel Edit</button>
+                    </div>
+                    <form id="studySessionForm" class="grid-form">
+                        <input type="hidden" id="editSessionId" value="">
+                        
+                        <div class="form-group">
+                            <label for="sessionSubjectSelect">Subject *</label>
+                            <select id="sessionSubjectSelect" required>
+                                <option value="">Select subject...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sessionTopic">Topic / Chapter *</label>
+                            <input type="text" id="sessionTopic" placeholder="e.g. B-Trees & Indexing" required maxlength="255">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sessionDate">Study Date *</label>
+                            <input type="date" id="sessionDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            
+                        <label for="sessionStartTime" class="time-field-label">
+                            <span>Start Time</span>
+                            <span class="optional-badge">OPTIONAL</span>
+                        </label>
+
+                        <div class="time-input-wrapper">
+                            <span class="time-icon" aria-hidden="true">◷</span>
+                            <input type="time" id="sessionStartTime">
+                     </div>
+                    </div>
+
+                        <div class="form-group">
+                            <label for="sessionDuration">Duration (Minutes) *</label>
+                            <input type="number" id="sessionDuration" min="1" max="1440" placeholder="e.g. 60" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="sessionNotes">Notes / Key Takeaways</label>
+                            <textarea id="sessionNotes" rows="2" placeholder="Formulas, concepts reviewed, exercises completed..."></textarea>
+                        </div>
+
+                        <div class="form-actions full-width">
+                            <button type="submit" id="btnSubmitSession" class="btn-primary">Save Study Session</button>
+                            <button type="reset" id="btnResetSession" class="btn-secondary">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header filter-bar">
+                        <h3>All Study Sessions</h3>
+                        <div class="filter-controls">
+                            <input type="text" id="filterSessionSearch" placeholder="Search topic or notes..." class="input-sm">
+                            <select id="filterSessionSubject" class="input-sm">
+                                <option value="">All Subjects</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Subject</th>
+                                    <th>Topic</th>
+                                    <th>Duration</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allSessionsTableBody">
+                                <tr><td colspan="7" class="text-center">Loading study sessions...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: HABITS -->
+            <section id="tab-habits" class="tab-pane">
+                <div class="habits-header-row">
+                    <div class="date-navigator">
+                        <button id="btnPrevHabitDate" class="btn-icon">◀</button>
+                        <input type="date" id="habitLogDatePicker">
+                        <button id="btnNextHabitDate" class="btn-icon">▶</button>
+                        <button id="btnTodayHabitDate" class="btn-secondary btn-sm">Today</button>
+                    </div>
+                    <div class="habits-action-buttons" style="display: flex; gap: 8px; align-items: center;">
+                        <button id="btnExportHabits30Days" class="btn-secondary btn-sm" title="Export past month habit completion logs to CSV for long-term consistency analysis">
+                            <span>📥 Export 30-Day Habits (CSV)</span>
+                        </button>
+                        <button id="btnOpenNewHabitModal" class="btn-primary">+ Add New Habit</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Daily Habits Tracker</h3>
+                        <span id="habitDayProgressLabel" class="badge badge-lavender">0% Completed</span>
+                    </div>
+                    <div id="habitsFullList" class="habits-grid">
+                        <p class="empty-state">Loading habits...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PLANNER -->
+            <section id="tab-planner" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Study Planner & Academic Backlog</h3>
+                        <button id="btnOpenNewTaskModal" class="btn-primary">+ Create Task</button>
+                    </div>
+                    <div class="tasks-board">
+                        <div class="task-column">
+                            <div class="column-header">
+                                <h4>Pending Tasks</h4>
+                                <span class="badge" id="pendingTasksBadge">0</span>
+                            </div>
+                            <div id="pendingTasksList" class="task-list">
+                                <p class="empty-state">No pending tasks. Great job!</p>
+                            </div>
+                        </div>
+                        <div class="task-column">
+                            <div class="column-header">
+                                <h4>Completed Tasks</h4>
+                                <span class="badge badge-success" id="completedTasksBadge">0</span>
+                            </div>
+                            <div id="completedTasksList" class="task-list">
+                                <p class="empty-state">No completed tasks yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: POMODORO TIMER -->
+            <section id="tab-pomodoro" class="tab-pane">
+                <div class="pomodoro-container">
+                    <div class="timer-mode-selector">
+                        <button class="timer-mode-btn active" data-mode="focus">Pomodoro (25m)</button>
+                        <button class="timer-mode-btn" data-mode="shortBreak">Short Break (5m)</button>
+                        <button class="timer-mode-btn" data-mode="longBreak">Long Break (15m)</button>
+                    </div>
+
+                    <div class="timer-clock">
+                        <div class="clock-circle">
+                            <div class="timer-display" id="pomodoroTimerDisplay">25:00</div>
+                            <span class="timer-status-text" id="pomodoroModeLabel">Focus Mode</span>
+                        </div>
+                    </div>
+
+                    <div class="timer-session-link">
+                        <label>Associate with Subject:</label>
+                        <select id="pomoSubjectSelect">
+                            <option value="">(Optional) General Study</option>
+                        </select>
+                        <input type="text" id="pomoTopicInput" placeholder="Topic to auto-save to sessions...">
+                    </div>
+
+                    <div class="timer-controls">
+                        <button id="btnPomoStart" class="btn-primary btn-lg">Start Focus</button>
+                        <button id="btnPomoPause" class="btn-secondary btn-lg" style="display:none;">Pause</button>
+                        <button id="btnPomoReset" class="btn-subtle btn-lg">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: SUBJECT ANALYTICS -->
+            <section id="tab-analytics" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Subject Time Distribution & Attention Index</h3>
+                    </div>
+                    <div class="analytics-layout">
+                        <div class="chart-box">
+                            <canvas id="subjectPieChart"></canvas>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Sessions</th>
+                                        <th>Total Hours</th>
+                                        <th>% Share</th>
+                                        <th>Attention</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectAnalyticsTableBody">
+                                    <tr><td colspan="5" class="text-center">Loading subject data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: STUDY CALENDAR -->
+            <section id="tab-calendar" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header calendar-nav-header">
+                        <div class="cal-nav">
+                            <button id="btnCalPrev" class="btn-icon">◀</button>
+                            <h3 id="calCurrentMonthLabel">October 2026</h3>
+                            <button id="btnCalNext" class="btn-icon">▶</button>
+                        </div>
+                        <div class="cal-legend">
+                            <span class="legend-box level-0">0h</span>
+                            <span class="legend-box level-1">&lt;1h</span>
+                            <span class="legend-box level-2">1-2h</span>
+                            <span class="legend-box level-3">2-3h</span>
+                            <span class="legend-box level-4">3h+</span>
+                        </div>
+                    </div>
+                    <div id="calendarGrid" class="calendar-grid"></div>
+                </div>
+
+                <!-- Day details inspector -->
+                <div id="dayInspectorPanel" class="panel" style="display:none;">
+                    <div class="panel-header">
+                        <h4 id="inspectorDateTitle">Activity for Date</h4>
+                        <button id="btnCloseInspector" class="btn-subtle">Close ✕</button>
+                    </div>
+                    <div id="inspectorDetailsContent"></div>
+                </div>
+            </section>
+
+            <!-- TAB 8: GOALS & ACHIEVEMENTS -->
+            <section id="tab-goals" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Academic Goals</h3>
+                    </div>
+                    <div class="goals-grid">
+                        <div class="goal-card">
+                            <h4>Daily Target</h4>
+                            <div class="goal-metric"><span id="goalDailyVal">0h</span> / <span id="goalDailyTarget">4h</span></div>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="barDailyGoal" style="width:0%"></div></div>
+                            <span class="goal-sub" id="goalDailyRemaining">4.0h remaining today</span>
+                        </div>
+                        <div class="goal-card">
+                            <h4>Weekly Target</h4>
+                            <div class="goal-metric"><span id="goalWeeklyVal">0h</span> / <span id="goalWeeklyTarget">25h</span></div>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="barWeeklyGoal" style="width:0%"></div></div>
+                            <span class="goal-sub" id="goalWeeklyRemaining">25.0h remaining this week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Achievement Badges (<span id="unlockedBadgesCount">0</span>/13)</h3>
+                    </div>
+                    <div id="badgesGrid" class="badges-grid"></div>
+                </div>
+            </section>
+
+            <!-- TAB 9: EXAMS & NOTES -->
+            <section id="tab-exams" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Upcoming Exams Countdown</h3>
+                        <button id="btnOpenNewExamModal" class="btn-primary">+ Add Exam</button>
+                    </div>
+                    <div id="examsCountdownList" class="exams-grid">
+                        <p class="empty-state">No exams scheduled. Add your first exam!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Modal: Add / Edit Habit -->
+    <div id="habitModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="habitModalTitle">Add New Habit</h3>
+                <button class="btn-close-modal">✕</button>
+            </div>
+            <form id="habitModalForm">
+                <input type="hidden" id="modalHabitId">
+                <div class="form-group">
+                    <label for="modalHabitName">Habit Name *</label>
+                    <input type="text" id="modalHabitName" placeholder="e.g. Solve 1 DSA Problem" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalHabitDesc">Description</label>
+                    <input type="text" id="modalHabitDesc" placeholder="e.g. 30 minutes on LeetCode">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Save Habit</button>
+                    <button type="button" class="btn-secondary btn-close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add / Edit Task -->
+    <div id="taskModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="taskModalTitle">Add Planner Task</h3>
+                <button class="btn-close-modal">✕</button>
+            </div>
+            <form id="taskModalForm">
+                <input type="hidden" id="modalTaskId">
+                <div class="form-group">
+                    <label for="modalTaskTitle">Task Title *</label>
+                    <input type="text" id="modalTaskTitle" placeholder="e.g. Complete OS lab assignment" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalTaskSubject">Subject</label>
+                    <select id="modalTaskSubject">
+                        <option value="">General (No subject)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modalTaskDue">Due Date</label>
+                    <input type="date" id="modalTaskDue">
+                </div>
+                <div class="form-group">
+                    <label for="modalTaskPriority">Priority</label>
+                    <select id="modalTaskPriority">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Save Task</button>
+                    <button type="button" class="btn-secondary btn-close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Exam -->
+    <div id="examModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add Upcoming Exam</h3>
+                <button class="btn-close-modal">✕</button>
+            </div>
+            <form id="examModalForm">
+                <div class="form-group">
+                    <label for="modalExamName">Exam Name *</label>
+                    <input type="text" id="modalExamName" placeholder="e.g. Mid-Term Theory Exam" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalExamSubject">Subject</label>
+                    <select id="modalExamSubject">
+                        <option value="">General</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modalExamDate">Exam Date *</label>
+                    <input type="date" id="modalExamDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalExamNotes">Syllabus / Notes</label>
+                    <textarea id="modalExamNotes" rows="2" placeholder="Chapters 1-4, Algorithms 5.1-5.4..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Save Exam</button>
+                    <button type="button" class="btn-secondary btn-close-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    <!-- Modal: Export Datasets -->
+    <div id="exportModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Export TrackMate Data (CSV)</h3>
+                <button class="btn-close-modal">✕</button>
+            </div>
+            <p style="font-size: 0.8rem; color: #A6A0B5; margin-bottom: 12px;">
+                Download your data as clean, UTF-8 BOM encoded CSV files ready for Microsoft Excel, Google Sheets, or Python pandas analysis.
+            </p>
+            <div class="export-options-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn-export-choice btn-secondary" data-dataset="habit-logs-past-month" style="text-align: left; padding: 12px; border-left: 3px solid #8B5CF6; justify-content: flex-start;">
+                    <div>
+                        <strong style="display: block; color: #A78BFA;">📊 Habits (Past Month / 30 Days)</strong>
+                        <span style="font-size: 0.75rem; color: #A6A0B5;">Comprehensive 30-day completion logs, consistency ratings, and habit adherence breakdown</span>
+                    </div>
+                </button>
+                <button type="button" class="btn-export-choice btn-secondary" data-dataset="habit-consistency-monthly" style="text-align: left; padding: 12px; border-left: 3px solid #4ADE80; justify-content: flex-start;">
+                    <div>
+                        <strong style="display: block; color: #4ADE80;">📈 Monthly Consistency Analysis</strong>
+                        <span style="font-size: 0.75rem; color: #A6A0B5;">Daily completion percentages, consistency ratings, and adherence summary</span>
+                    </div>
+                </button>
+                <button type="button" class="btn-export-choice btn-secondary" data-dataset="study-sessions" style="text-align: left; padding: 12px; justify-content: flex-start;">
+                    <div>
+                        <strong style="display: block; color: #F5F3FF;">⏱️ Study Sessions (All Logs)</strong>
+                        <span style="font-size: 0.75rem; color: #A6A0B5;">Session dates, durations, subjects, topics, and study notes</span>
+                    </div>
+                </button>
+                <button type="button" class="btn-export-choice btn-secondary" data-dataset="habit-logs" style="text-align: left; padding: 12px; justify-content: flex-start;">
+                    <div>
+                        <strong style="display: block; color: #F5F3FF;">📋 All Habit Logs (Full History)</strong>
+                        <span style="font-size: 0.75rem; color: #A6A0B5;">Complete lifetime habit logs across all recorded dates</span>
+                    </div>
+                </button>
+                <button type="button" class="btn-export-choice btn-secondary" data-dataset="tasks" style="text-align: left; padding: 12px; justify-content: flex-start;">
+                    <div>
+                        <strong style="display: block; color: #F5F3FF;">📝 Study Planner Tasks</strong>
+                        <span style="font-size: 0.75rem; color: #A6A0B5;">Academic backlog tasks, deadlines, priorities, and status</span>
+                    </div>
+                </button>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn-secondary btn-close-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

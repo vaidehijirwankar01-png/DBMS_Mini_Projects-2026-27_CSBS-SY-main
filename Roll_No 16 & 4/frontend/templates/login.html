@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — College Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 64px; height: 64px;">
+                        <i class="bi bi-mortarboard-fill fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">CampusCore Portal</h4>
+                    <p class="text-muted small">DBMS Full-Stack Academic Project</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label small fw-semibold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="Enter username" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label small fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                            <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="Enter password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to System
+                    </button>
+                </form>
+
+                <hr class="my-4 text-muted">
+
+                <!-- Quick Login Credentials helper for Viva / Demo -->
+                <div>
+                    <h6 class="text-muted small fw-bold text-uppercase mb-2 text-center">Demo Accounts (For Viva/Demo):</h6>
+                    <div class="list-group list-group-flush small">
+                        <button type="button" class="list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center" onclick="fillCreds('admin', 'admin123')">
+                            <span><strong class="text-primary">Administrator:</strong> admin</span>
+                            <span class="badge bg-secondary">admin123</span>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center" onclick="fillCreds('faculty1', 'faculty123')">
+                            <span><strong class="text-success">Faculty:</strong> faculty1</span>
+                            <span class="badge bg-secondary">faculty123</span>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action py-2 d-flex justify-content-between align-items-center" onclick="fillCreds('clerk1', 'clerk123')">
+                            <span><strong class="text-warning text-dark">Accounts Clerk:</strong> clerk1</span>
+                            <span class="badge bg-secondary">clerk123</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="text-center mt-3 text-muted small">
+            B.Tech Computer Science & Business Systems &bull; MySQL 8.x
+        </div>
+    </div>
+</div>
+
+<script>
+function fillCreds(u, p) {
+    document.getElementById('username').value = u;
+    document.getElementById('password').value = p;
+}
+</script>
+{% endblock %}

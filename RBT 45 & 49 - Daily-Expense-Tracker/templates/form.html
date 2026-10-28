@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{% if expense is none %}Add expense{% else %}Edit expense{% endif %}{% endblock %}
+
+{% block content %}
+<h1>{% if expense is none %}Add expense{% else %}Edit expense{% endif %}</h1>
+
+<!-- The form sends data to /add when adding, or /edit/<id> when editing -->
+<form method="post" action="{% if expense is none %}/add{% else %}/edit/{{ expense.expense_id }}{% endif %}">
+
+    <p>
+        <label>Amount
+            <input type="number" name="amount" step="0.01" min="0.01" required
+                {% if expense is not none %}value="{{ expense.amount }}"{% endif %}>
+        </label>
+    </p>
+
+    <p>
+        <label>Category
+            <select name="category_id">
+                <!-- One option for each category; the current one is selected when editing -->
+                {% for category in categories %}
+                <option value="{{ category.category_id }}"
+                    {% if expense is not none and expense.category_id == category.category_id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+    </p>
+
+    <p>
+        <label>Date
+            <input type="date" name="expense_date" required
+                {% if expense is not none %}value="{{ expense.expense_date }}"{% endif %}>
+        </label>
+    </p>
+
+    <p>
+        <label>Note
+            <input type="text" name="note" maxlength="200"
+                {% if expense is not none %}value="{{ expense.note or '' }}"{% endif %}>
+        </label>
+    </p>
+
+    <button type="submit">Save</button>
+    <a href="/">Cancel</a>
+</form>
+{% endblock %}

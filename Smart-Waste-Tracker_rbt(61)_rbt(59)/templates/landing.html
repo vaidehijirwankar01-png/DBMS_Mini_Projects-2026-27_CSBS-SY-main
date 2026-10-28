@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Waste Collection & Segregation Tracker{% endblock %}
+
+{% block public_content %}
+<div class="row align-items-center py-5">
+    <div class="col-lg-7">
+        <span class="badge bg-success-subtle text-success fs-6 mb-3 px-3 py-2 border border-success-subtle">
+            <i class="bi bi-shield-check me-1"></i> Academic DBMS Capstone Project
+        </span>
+        <h1 class="display-4 fw-bold text-dark mb-3">
+            Smart Waste Collection & <span class="text-success">Segregation Tracker</span>
+        </h1>
+        <p class="lead text-secondary mb-4">
+            A comprehensive, normalized relational database management system designed to streamline municipal waste scheduling, track citizen segregation compliance, coordinate sanitation workers, and deliver real-time recycling analytics.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-lg px-4 shadow-sm">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Access Portal
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-success btn-lg px-4">
+                <i class="bi bi-person-plus me-2"></i> Citizen Registration
+            </a>
+            <a href="{{ url_for('citizen.segregation_guide') }}" class="btn btn-outline-secondary btn-lg px-3">
+                <i class="bi bi-book me-2"></i> Segregation Guide
+            </a>
+        </div>
+
+        <div class="mt-4 pt-3 border-top d-flex gap-4 text-muted small">
+            <div><i class="bi bi-check-circle-fill text-success me-1"></i> MySQL 8.0 Engine</div>
+            <div><i class="bi bi-check-circle-fill text-success me-1"></i> BCNF/3NF Normalization</div>
+            <div><i class="bi bi-check-circle-fill text-success me-1"></i> Role-Based Security</div>
+            <div><i class="bi bi-check-circle-fill text-success me-1"></i> ACID Transactions</div>
+        </div>
+    </div>
+    <div class="col-lg-5 text-center mt-5 mt-lg-0">
+        <div class="card border-0 shadow-lg p-4 bg-white rounded-4">
+            <div class="text-success mb-3">
+                <i class="bi bi-recycle" style="font-size: 5rem;"></i>
+            </div>
+            <h4 class="fw-bold text-dark">Default Demo Accounts</h4>
+            <p class="text-muted small mb-3">All accounts use password: <strong class="text-dark">password123</strong></p>
+            <div class="list-group list-group-flush text-start small">
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Administrator:</strong><br>
+                        <code>admin@smartwaste.com</code>
+                    </div>
+                    <span class="badge bg-danger">Admin</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Sanitation Worker:</strong><br>
+                        <code>suresh.kumar@email.com</code>
+                    </div>
+                    <span class="badge bg-info text-dark">Worker</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Citizen:</strong><br>
+                        <code>rahul.sharma@email.com</code>
+                    </div>
+                    <span class="badge bg-success">Citizen</span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success mt-3 w-100 fw-semibold">Quick Sign In</a>
+        </div>
+    </div>
+</div>
+
+<!-- Architecture & Features Showcase -->
+<div class="row g-4 my-5">
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="text-success fs-1 mb-2"><i class="bi bi-calendar-check"></i></div>
+            <h5 class="fw-bold">Scheduled Pickups</h5>
+            <p class="text-muted small">Citizens specify waste category, estimated quantity in kg, preferred date, and pickup address.</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="text-success fs-1 mb-2"><i class="bi bi-diagram-3"></i></div>
+            <h5 class="fw-bold">Segregation Audit</h5>
+            <p class="text-muted small">Workers verify physical waste segregation compliance upon pickup and record audit metrics.</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="text-success fs-1 mb-2"><i class="bi bi-truck"></i></div>
+            <h5 class="fw-bold">Worker Dispatch</h5>
+            <p class="text-muted small">Atomic dispatch transactions assign available workers to pending area pickups with duplicate locking.</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-0 shadow-sm p-3 text-center">
+            <div class="text-success fs-1 mb-2"><i class="bi bi-pie-chart"></i></div>
+            <h5 class="fw-bold">Recycling Analytics</h5>
+            <p class="text-muted small">Track processing destinations, disposal methods, recycling percentages, and area generation trends.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

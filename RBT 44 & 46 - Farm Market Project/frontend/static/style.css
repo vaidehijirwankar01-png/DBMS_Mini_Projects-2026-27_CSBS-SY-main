@@ -1,0 +1,21 @@
+body { font-family: Arial, sans-serif; margin: 0; background: #f4f7f2; color: #222; }
+.nav { background: #2e7d32; color: #fff; padding: 12px 20px; display: flex; gap: 20px; align-items: center; }
+.nav a { color: #fff; }
+.nav .right { margin-left: auto; }
+.box { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+h2 { border-bottom: 2px solid #2e7d32; padding-bottom: 4px; margin-top: 30px; }
+table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 15px; }
+th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; font-size: 14px; }
+th { background: #e8f5e9; }
+input, select, button { padding: 6px; margin: 2px; font-size: 14px; }
+input[type=number] { width: 90px; }
+button { background: #2e7d32; color: #fff; border: 0; cursor: pointer; }
+button.red { background: #c62828; }
+form.inline { display: inline; }
+.card { background: #fff; border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
+.portals { display: flex; gap: 15px; }
+.portals .card { flex: 1; text-align: center; }
+.msg { padding: 8px 12px; border-left: 4px solid; }
+.msg.ok { background: #e8f5e9; border-color: #2e7d32; }
+.msg.error { background: #ffebee; border-color: #c62828; }
+.stats span { display: inline-block; background: #fff; border: 1px solid #ccc; padding: 8px 14px; margin: 0 8px 8px 0; }

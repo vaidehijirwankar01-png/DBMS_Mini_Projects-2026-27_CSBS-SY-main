@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}SQL Console &amp; DBMS Showcase{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">⚡ Interactive SQL Console</h1>
+    <p class="page-subtitle">Academic DBMS Query Execution, Subqueries, Joins, Aggregations &amp; Execution Plans</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;align-items:start;">
+  <!-- Left Column: Pre-built Academic DBMS Query Showcase -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Curated DBMS Queries</h3>
+      </div>
+      <div class="card-body" style="padding:1rem;">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">
+          Click any preset below to load the SQL query into the execution console for lab evaluation:
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT b1.book_id, b1.title, c.category_name, b1.price,\n       ROUND((SELECT AVG(b2.price) FROM books b2 WHERE b2.category_id = b1.category_id), 2) AS category_avg\nFROM books b1\nJOIN categories c ON b1.category_id = c.category_id\nWHERE b1.price > (SELECT AVG(b2.price) FROM books b2 WHERE b2.category_id = b1.category_id)\nORDER BY b1.price DESC;`)">
+            📌 1. Correlated Subquery (Above Avg Price)
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT c.category_name, COUNT(b.book_id) AS total_titles, ROUND(AVG(b.price), 2) AS avg_price, SUM(b.total_copies) AS total_inventory\nFROM categories c\nJOIN books b ON c.category_id = b.category_id\nGROUP BY c.category_id, c.category_name\nHAVING COUNT(b.book_id) >= 2 AND AVG(b.price) > 50.0\nORDER BY avg_price DESC;`)">
+            📌 2. GROUP BY with HAVING Clause
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT m.member_id, m.first_name || ' ' || m.last_name AS member_name, m.email, m.membership_type\nFROM members m\nWHERE NOT EXISTS (\n    SELECT 1 FROM loans l WHERE l.member_id = m.member_id\n);`)">
+            📌 3. Relational Difference (NOT EXISTS)
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT b.title, c.category_name, b.price,\n       RANK() OVER (PARTITION BY b.category_id ORDER BY b.price DESC) AS price_rank\nFROM books b\nJOIN categories c ON b.category_id = c.category_id\nORDER BY c.category_name, price_rank;`)">
+            📌 4. Window Function (RANK partitioned)
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT b.book_id, b.title, c.category_name, COUNT(l.loan_id) AS times_borrowed\nFROM books b\nJOIN categories c ON b.category_id = c.category_id\nLEFT JOIN loans l ON b.book_id = l.book_id\nGROUP BY b.book_id\nORDER BY times_borrowed DESC\nLIMIT 5;`)">
+            📌 5. Top 5 Most Borrowed Titles
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT l.loan_id, m.first_name || ' ' || m.last_name AS member_name, b.title,\n       l.issue_date, l.due_date,\n       CAST(ROUND(julianday('now') - julianday(l.due_date)) AS INTEGER) AS days_overdue,\n       CAST(ROUND(julianday('now') - julianday(l.due_date)) * 5.0 AS DECIMAL(10,2)) AS fine_amount\nFROM loans l\nJOIN members m ON l.member_id = m.member_id\nJOIN books b ON l.book_id = b.book_id\nWHERE l.return_date IS NULL AND DATE('now') > l.due_date;`)">
+            📌 6. Overdue Computation with Date Functions
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`EXPLAIN QUERY PLAN\nSELECT b.title, c.category_name\nFROM books b\nJOIN categories c ON b.category_id = c.category_id\nWHERE b.isbn = '978-0078022159';`)">
+            🔍 7. EXPLAIN QUERY PLAN (Index Verification)
+          </button>
+
+          <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="loadSqlSample(`SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 10;`)">
+            📜 8. View Trigger Audit Trail
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: SQL Editor and Dynamic Results -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">SQL Query Editor</h3>
+        <span class="badge badge-info">SQLite 3 / Standard SQL</span>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('sql_console') }}" method="POST">
+          <div class="form-group">
+            <textarea id="sql-query-input" name="query" rows="7" style="font-family:monospace;font-size:0.9rem;" placeholder="Enter SQL SELECT statement here...">{{ executed_query }}</textarea>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <small style="color:var(--text-muted);">Only read-only queries (SELECT, EXPLAIN) are permitted for safety.</small>
+            <button type="submit" class="btn btn-primary">▶ Execute SQL Query</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Query Execution Output -->
+    {% if query_error %}
+      <div class="alert alert-danger">
+        <strong>Query Execution Error:</strong> {{ query_error }}
+      </div>
+    {% elif results is not none %}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Execution Result ({{ row_count }} row{{ 's' if row_count != 1 else '' }})</h3>
+          <span class="badge badge-success">Status: OK</span>
+        </div>
+        <div class="table-responsive" style="max-height:450px;overflow-y:auto;">
+          {% if results %}
+            <table>
+              <thead>
+                <tr>
+                  {% for col in columns %}
+                    <th>{{ col }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in results %}
+                <tr>
+                  {% for col in columns %}
+                    <td>{{ row[col] if row[col] is not none else 'NULL' }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+              Query executed successfully, returning 0 rows.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

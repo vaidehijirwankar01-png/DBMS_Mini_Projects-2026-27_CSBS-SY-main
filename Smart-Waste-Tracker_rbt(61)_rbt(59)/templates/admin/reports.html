@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Reports & Statistical Analytics</h3>
+        <p class="text-muted small mb-0">Generate, view, and export operational metrics across service areas and workforce</p>
+    </div>
+    <div class="dropdown">
+        <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-download me-1"></i> Export CSV Report
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('admin.download_csv', type='collections', start_date=start_date, end_date=end_date) }}">Collections Log CSV</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.download_csv', type='areas') }}">Area Waste Summary CSV</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.download_csv', type='workers') }}">Worker Performance CSV</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.download_csv', type='categories') }}">Category Breakdown CSV</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Date Filter Form -->
+<div class="card border-0 shadow-sm rounded-3 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('admin.reports') }}" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-secondary">From Date</label>
+            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-secondary">To Date</label>
+            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-funnel"></i> Apply Date Filter</button>
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Nav Tabs for Report Modules -->
+<ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active fw-semibold" id="collections-tab" data-bs-toggle="tab" data-bs-target="#collections" type="button">
+            <i class="bi bi-table me-1"></i> Collection History
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="areas-tab" data-bs-toggle="tab" data-bs-target="#areas" type="button">
+            <i class="bi bi-geo me-1"></i> Area-Wise Summary
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="workers-tab" data-bs-toggle="tab" data-bs-target="#workers" type="button">
+            <i class="bi bi-person-check me-1"></i> Worker Performance
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="views-tab" data-bs-toggle="tab" data-bs-target="#views" type="button">
+            <i class="bi bi-eye me-1"></i> Database Views
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Collections Tab -->
+    <div class="tab-pane fade show active" id="collections">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Collections within Selected Range ({{ collections | length }} records)</h6>
+                <a href="{{ url_for('admin.download_csv', type='collections', start_date=start_date, end_date=end_date) }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-filetype-csv"></i> Download CSV
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Req #</th>
+                            <th>Citizen</th>
+                            <th>Category</th>
+                            <th>Area</th>
+                            <th>Est. Qty</th>
+                            <th>Act. Qty</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in collections %}
+                        <tr>
+                            <td class="fw-bold">#{{ c.request_id }}</td>
+                            <td>{{ c.citizen_name }}</td>
+                            <td>{{ c.category_name }}</td>
+                            <td>{{ c.area_name or '—' }}</td>
+                            <td>{{ c.estimated_quantity_kg }} kg</td>
+                            <td class="fw-semibold text-success">{{ c.actual_quantity_kg or '—' }} {% if c.actual_quantity_kg %}kg{% endif %}</td>
+                            <td><span class="badge bg-{{ c.status | status_badge }}">{{ c.status }}</span></td>
+                            <td class="text-muted small">{{ c.created_at | format_date }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" class="text-center text-muted py-4">No records found for this period.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area Summary Tab -->
+    <div class="tab-pane fade" id="areas">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Service Area</th>
+                            <th>Locality / Sector</th>
+                            <th>Postal Code</th>
+                            <th>Total Pickup Requests</th>
+                            <th>Total Collected Waste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in area_stats %}
+                        <tr>
+                            <td class="fw-bold text-dark">{{ a.area_name }}</td>
+                            <td>{{ a.locality or 'General' }}</td>
+                            <td><code>{{ a.postal_code }}</code></td>
+                            <td><span class="badge bg-light text-dark border">{{ a.request_count }}</span></td>
+                            <td class="fw-bold text-success">{{ a.total_kg | round(1) }} kg</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Performance Tab -->
+    <div class="tab-pane fade" id="workers">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Worker Name</th>
+                            <th>Contact</th>
+                            <th>Availability Status</th>
+                            <th>Total Tasks Assigned</th>
+                            <th>Tasks Completed</th>
+                            <th>Average Citizen Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wp in worker_perf %}
+                        <tr>
+                            <td class="fw-bold text-dark">{{ wp.worker_name }}</td>
+                            <td>{{ wp.phone or 'N/A' }}</td>
+                            <td><span class="badge bg-{{ wp.availability_status | status_badge }}">{{ wp.availability_status }}</span></td>
+                            <td>{{ wp.total_assigned }}</td>
+                            <td class="fw-bold text-success">{{ wp.completed_tasks }}</td>
+                            <td>
+                                <span class="text-warning"><i class="bi bi-star-fill"></i></span>
+                                <span class="fw-bold">{{ wp.avg_rating | round(1) }}</span> / 5.0
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Views Tab -->
+    <div class="tab-pane fade" id="views">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-3 mb-4">
+            <h6 class="fw-bold text-success mb-2">View: <code>vw_area_waste_summary</code></h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            {% if area_summary and area_summary|length > 0 %}
+                                {% for col in area_summary[0].keys() %}
+                                    <th>{{ col }}</th>
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in area_summary %}
+                        <tr>
+                            {% for val in row.values() %}
+                                <td>{{ val }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-muted text-center">View data loaded or view is empty.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

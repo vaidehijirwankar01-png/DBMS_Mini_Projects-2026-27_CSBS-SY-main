@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} — Student Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Student 360&deg; Profile</h3>
+        <p class="text-muted small mb-0">Aggregated via Stored Procedures: <code>GetStudentDetails</code> &amp; <code>GetStudentFeeSummary</code></p>
+    </div>
+    <a href="{{ url_for('students') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Student List
+    </a>
+</div>
+
+<!-- Primary Profile Info Card -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    {{ student.full_name[:1] }}
+                </div>
+                <h4 class="fw-bold mb-1">{{ student.full_name }}</h4>
+                <div class="text-primary fw-semibold mb-2"><code>{{ student.roll_number }}</code></div>
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-3">{{ student.department_name }}</span>
+
+                <div class="text-start border-top pt-3 small">
+                    <div class="mb-2"><i class="bi bi-envelope text-muted me-2"></i><strong>Email:</strong> {{ student.email }}</div>
+                    <div class="mb-2"><i class="bi bi-telephone text-muted me-2"></i><strong>Phone:</strong> {{ student.phone }}</div>
+                    <div class="mb-2"><i class="bi bi-calendar text-muted me-2"></i><strong>DOB:</strong> {{ student.date_of_birth }}</div>
+                    <div class="mb-2"><i class="bi bi-gender-ambiguous text-muted me-2"></i><strong>Gender:</strong> {{ student.gender }}</div>
+                    <div class="mb-2"><i class="bi bi-geo-alt text-muted me-2"></i><strong>Address:</strong> {{ student.address }}</div>
+                    <div class="mb-2"><i class="bi bi-mortarboard text-muted me-2"></i><strong>Batch / Sem:</strong> Admission {{ student.admission_year }} &bull; Semester {{ student.semester }}</div>
+                    <div class="mb-0"><i class="bi bi-building text-muted me-2"></i><strong>HOD:</strong> {{ student.hod_name }} ({{ student.office_location }})</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Card populated via GetStudentFeeSummary -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-cash-stack text-success me-2"></i> Financial Obligations (via <code>GetStudentFeeSummary</code>)</span>
+                <span class="badge bg-light text-secondary border">OUT Parameters</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 text-center">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <span class="text-muted small text-uppercase fw-semibold">Total Fee Assessment</span>
+                            <h4 class="fw-bold text-dark mt-2 mb-0">₹{{ "{:,.2f}".format(fee_summary.get('total_fees', 0)) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-success bg-opacity-10 rounded-3">
+                            <span class="text-success small text-uppercase fw-semibold">Amount Paid</span>
+                            <h4 class="fw-bold text-success mt-2 mb-0">₹{{ "{:,.2f}".format(fee_summary.get('paid_fees', 0)) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-danger bg-opacity-10 rounded-3">
+                            <span class="text-danger small text-uppercase fw-semibold">Pending Balance</span>
+                            <h4 class="fw-bold text-danger mt-2 mb-0">₹{{ "{:,.2f}".format(fee_summary.get('pending_fees', 0)) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Courses -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-check text-primary me-2"></i> Enrolled Curriculum Courses ({{ enrollments|length }})</span>
+                <span class="badge bg-light text-secondary border">INNER JOIN enrollments</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Course Name</th>
+                            <th>Credits</th>
+                            <th>Academic Year</th>
+                            <th>Instructor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in enrollments %}
+                        <tr>
+                            <td><code>{{ e.course_code }}</code></td>
+                            <td class="fw-semibold">{{ e.course_name }}</td>
+                            <td>{{ e.credits }} Credits</td>
+                            <td>{{ e.academic_year }} (Sem {{ e.semester }})</td>
+                            <td><i class="bi bi-person text-muted me-1"></i>{{ e.instructor or 'Unassigned' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-3 text-muted">No course enrollments found for this student.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Examination Results -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-award text-warning text-dark me-2"></i> Examination Results &amp; Trigger-Assigned Grades</span>
+                <span class="badge bg-light text-secondary border">Multi-Table JOIN</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Course</th>
+                            <th>Marks Obtained</th>
+                            <th>Maximum</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr>
+                            <td class="fw-semibold">{{ r.exam_name }}</td>
+                            <td>{{ r.course_name }}</td>
+                            <td><strong>{{ r.marks_obtained }}</strong></td>
+                            <td>{{ r.maximum_marks }}</td>
+                            <td><span class="badge bg-primary">{{ r.grade }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-3 text-muted">No examination results recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

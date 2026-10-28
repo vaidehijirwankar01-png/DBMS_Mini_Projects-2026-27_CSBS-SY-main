@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Choose your portal</h2>
+<div class="portals">
+  <div class="card"><h3><a href="{{ url_for('portal', role='farmer') }}">Farmer</a></h3>
+    <p>List, price and remove your products.</p>
+    <a href="{{ url_for('register', role='farmer') }}">Register new farmer</a></div>
+  <div class="card"><h3><a href="{{ url_for('portal', role='consumer') }}">Consumer</a></h3>
+    <p>Browse local produce and place orders.</p>
+    <a href="{{ url_for('register', role='consumer') }}">Register new consumer</a></div>
+  <div class="card"><h3><a href="{{ url_for('portal', role='admin') }}">Administrator</a></h3>
+    <p>Manage users, orders, payments and deliveries.</p></div>
+</div>
+{% endblock %}

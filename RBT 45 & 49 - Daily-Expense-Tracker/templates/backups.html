@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Backups{% endblock %}
+
+{% block content %}
+<h1>Backups</h1>
+
+<!-- Pressing this button asks the server to create a backup -->
+<form method="post" action="/backup">
+    <button type="submit">Create backup</button>
+</form>
+
+{% if backups %}
+<table border="1">
+    <tr>
+        <th>Expense ID</th>
+        <th>Amount</th>
+        <th>Category ID</th>
+        <th>Date</th>
+        <th>Note</th>
+        <th>Backed up at</th>
+    </tr>
+
+    <!-- One row for each backup record -->
+    {% for backup in backups %}
+    <tr>
+        <td>{{ backup.expense_id }}</td>
+        <td>{{ backup.amount }}</td>
+        <td>{{ backup.category_id }}</td>
+        <td>{{ backup.expense_date }}</td>
+        <td>{{ backup.note }}</td>
+        <td>{{ backup.backed_up_at }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No backups yet.</p>
+{% endif %}
+{% endblock %}

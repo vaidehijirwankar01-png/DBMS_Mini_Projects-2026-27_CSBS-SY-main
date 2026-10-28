@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}New Sale POS - Retail Store Management System{% endblock %}
+{% block page_title %}New Sale Transaction (POS){% endblock %}
+{% block page_subtitle %}Point of Sale terminal &bull; Relational sale and sale_item transaction{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-xl-8">
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div class="content-card-title">
+          <i class="bi bi-cart-plus text-primary"></i>
+          <span>Point of Sale Billing Terminal</span>
+        </div>
+        <a href="{{ url_for('sales') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Back to Sales List
+        </a>
+      </div>
+
+      <div class="content-card-body p-4">
+        <form method="POST" action="{{ url_for('new_sale') }}" id="saleForm" novalidate>
+          <!-- Section 1: Customer & Employee Selection -->
+          <div class="row g-3 mb-4 p-3 bg-light rounded border">
+            <!-- Customer Select -->
+            <div class="col-md-6">
+              <label for="customer_id" class="form-label fw-bold small text-uppercase">
+                <i class="bi bi-person me-1 text-primary"></i> 1. Select Customer <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="customer_id" name="customer_id" required>
+                <option value="">-- Choose Customer --</option>
+                {% for c in customers %}
+                  <option value="{{ c.customer_id }}">
+                    {{ c.customer_name }} (ID #{{ c.customer_id }}){% if c.phone %} &bull; {{ c.phone }}{% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="form-text small">
+                Customer from <code>customer</code> table. Need a new one? <a href="{{ url_for('customers') }}" target="_blank">Add Customer</a>.
+              </div>
+            </div>
+
+            <!-- Employee Select -->
+            <div class="col-md-6">
+              <label for="employee_id" class="form-label fw-bold small text-uppercase">
+                <i class="bi bi-person-badge me-1 text-primary"></i> 2. Select Billing Employee <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="employee_id" name="employee_id" required>
+                <option value="">-- Choose Staff Member --</option>
+                {% for e in employees %}
+                  <option value="{{ e.employee_id }}">
+                    {{ e.employee_name }} ({{ e.role }}) &bull; ID #{{ e.employee_id }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="form-text small">
+                Cashier/Staff from <code>employee</code> table handling this sale.
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Product Line Items -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0 text-dark">
+              <i class="bi bi-basket3 me-1 text-primary"></i> 3. Select Products &amp; Enter Quantities
+            </h6>
+            <button type="button" class="btn btn-primary btn-sm" id="addItemRowBtn">
+              <i class="bi bi-plus-circle me-1"></i> Add Another Product
+            </button>
+          </div>
+
+          <div class="table-responsive mb-3">
+            <table class="table custom-table align-middle border mb-0" id="itemsTable">
+              <thead class="table-light">
+                <tr>
+                  <th style="min-width: 250px;">Product</th>
+                  <th style="width: 140px;">Unit Price (₹)</th>
+                  <th style="width: 120px;">Stock</th>
+                  <th style="width: 130px;">Quantity</th>
+                  <th style="width: 140px;">Subtotal (₹)</th>
+                  <th style="width: 60px;" class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <!-- Initial Row -->
+                <tr class="item-row">
+                  <td>
+                    <select name="product_id[]" class="form-select product-select" required>
+                      <option value="" data-price="0" data-stock="0">-- Select Product --</option>
+                      {% for p in products %}
+                        <option value="{{ p.product_id }}" 
+                                data-price="{{ p.price }}" 
+                                data-stock="{{ p.quantity }}"
+                                data-name="{{ p.product_name }}"
+                                {% if p.quantity == 0 %}disabled{% endif %}>
+                          {{ p.product_name }} &bull; ₹{{ "%.2f"|format(p.price) }} ({{ p.quantity }} available)
+                          {% if p.quantity == 0 %}[Out of Stock]{% endif %}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white">₹</span>
+                      <input type="text" class="form-control unit-price bg-light text-end fw-semibold" value="0.00" readonly>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-secondary border stock-badge">0 units</span>
+                  </td>
+                  <td>
+                    <input type="number" 
+                           name="quantity[]" 
+                           class="form-control form-control-sm qty-input text-center" 
+                           min="1" 
+                           max="9999" 
+                           value="1" 
+                           required>
+                  </td>
+                  <td>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white">₹</span>
+                      <input type="text" class="form-control line-subtotal bg-light text-end fw-bold text-success" value="0.00" readonly>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-row-btn" title="Remove Item" disabled>
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="addItemRowBtnBottom">
+              <i class="bi bi-plus-lg me-1"></i> Add Item Row
+            </button>
+            <div class="small text-muted">
+              Prices &amp; stock levels fetched live from <code>product</code> table.
+            </div>
+          </div>
+
+          <!-- Transaction Assurance Card -->
+          <div class="alert alert-info border d-flex gap-3 align-items-start mb-4">
+            <i class="bi bi-shield-check fs-3 text-info mt-1"></i>
+            <div class="small">
+              <strong>ACID Database Transaction Guarantee:</strong><br>
+              When you click <em>Complete Sale</em>, a MySQL transaction begins:
+              <ul class="mb-0 ps-3 mt-1">
+                <li>Sale record is inserted into <code>Sale</code> table.</li>
+                <li>Individual purchased items are inserted into <code>Sale_Item</code> table.</li>
+                <li>Sold stock is automatically deducted from <code>Product.quantity</code>.</li>
+                <li>If stock is insufficient or any query fails, the entire transaction is rolled back with zero data loss.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('sales') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm" id="submitSaleBtn">
+              <i class="bi bi-check2-circle me-1"></i> Complete Sale &amp; Print Invoice
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Real-time Order Summary -->
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+      <div class="card-header bg-dark text-white p-3">
+        <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-receipt me-2"></i>Order Summary</span>
+          <span class="badge bg-primary rounded-pill" id="totalItemsBadge">0 Items</span>
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <!-- Live Totals -->
+        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+          <span class="text-muted">Total Line Items:</span>
+          <strong id="summaryItemCount" class="text-dark">0</strong>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+          <span class="text-muted">Total Units to Bill:</span>
+          <strong id="summaryUnitsCount" class="text-dark">0</strong>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+          <span class="text-muted">Tax / GST (Included):</span>
+          <span class="text-muted">₹0.00</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center my-3 p-3 bg-success-subtle rounded border border-success-subtle">
+          <div>
+            <span class="text-success-emphasis fw-bold text-uppercase d-block small">Grand Total</span>
+            <small class="text-muted">Net Payable</small>
+          </div>
+          <div class="fs-2 fw-bold text-success" id="summaryGrandTotal">
+            ₹0.00
+          </div>
+        </div>
+
+        <!-- Validation Alert Box -->
+        <div id="clientValidationAlert" class="alert alert-danger py-2 small d-none mb-3">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          <span id="clientValidationMsg">Please resolve errors before submitting.</span>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="text-muted small">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-database text-primary"></i>
+            <span>Database: <code>retail_store</code></span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-all text-success"></i>
+            <span>Foreign-key relational validation active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Template for adding dynamic product row -->
+<template id="rowTemplate">
+  <tr class="item-row">
+    <td>
+      <select name="product_id[]" class="form-select product-select" required>
+        <option value="" data-price="0" data-stock="0">-- Select Product --</option>
+        {% for p in products %}
+          <option value="{{ p.product_id }}" 
+                  data-price="{{ p.price }}" 
+                  data-stock="{{ p.quantity }}"
+                  data-name="{{ p.product_name }}"
+                  {% if p.quantity == 0 %}disabled{% endif %}>
+            {{ p.product_name }} &bull; ₹{{ "%.2f"|format(p.price) }} ({{ p.quantity }} available)
+            {% if p.quantity == 0 %}[Out of Stock]{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white">₹</span>
+        <input type="text" class="form-control unit-price bg-light text-end fw-semibold" value="0.00" readonly>
+      </div>
+    </td>
+    <td>
+      <span class="badge bg-light text-secondary border stock-badge">0 units</span>
+    </td>
+    <td>
+      <input type="number" 
+             name="quantity[]" 
+             class="form-control form-control-sm qty-input text-center" 
+             min="1" 
+             max="9999" 
+             value="1" 
+             required>
+    </td>
+    <td>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white">₹</span>
+        <input type="text" class="form-control line-subtotal bg-light text-end fw-bold text-success" value="0.00" readonly>
+      </div>
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn btn-outline-danger btn-sm remove-row-btn" title="Remove Item">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  </tr>
+</template>
+
+<!-- JavaScript for Dynamic Calculation and POS Behavior -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const itemsBody = document.getElementById("itemsBody");
+  const addBtnTop = document.getElementById("addItemRowBtn");
+  const addBtnBottom = document.getElementById("addItemRowBtnBottom");
+  const rowTemplate = document.getElementById("rowTemplate");
+  const grandTotalEl = document.getElementById("summaryGrandTotal");
+  const itemCountEl = document.getElementById("summaryItemCount");
+  const unitsCountEl = document.getElementById("summaryUnitsCount");
+  const totalItemsBadge = document.getElementById("totalItemsBadge");
+  const saleForm = document.getElementById("saleForm");
+  const valAlert = document.getElementById("clientValidationAlert");
+  const valMsg = document.getElementById("clientValidationMsg");
+
+  function formatCurrency(amount) {
+    return "₹" + Number(amount).toFixed(2);
+  }
+
+  function updateRowComputations(row) {
+    const select = row.querySelector(".product-select");
+    const priceInput = row.querySelector(".unit-price");
+    const stockBadge = row.querySelector(".stock-badge");
+    const qtyInput = row.querySelector(".qty-input");
+    const subtotalInput = row.querySelector(".line-subtotal");
+
+    const selectedOption = select.options[select.selectedIndex];
+    const price = parseFloat(selectedOption?.getAttribute("data-price") || 0);
+    const stock = parseInt(selectedOption?.getAttribute("data-stock") || 0, 10);
+    const hasProduct = Boolean(select.value);
+
+    priceInput.value = price.toFixed(2);
+
+    if (hasProduct) {
+      if (stock === 0) {
+        stockBadge.className = "badge bg-danger-subtle text-danger border border-danger-subtle stock-badge";
+        stockBadge.textContent = "Out of stock";
+      } else if (stock < 10) {
+        stockBadge.className = "badge bg-warning-subtle text-warning border border-warning-subtle stock-badge";
+        stockBadge.textContent = stock + " units (Low)";
+      } else {
+        stockBadge.className = "badge bg-success-subtle text-success border border-success-subtle stock-badge";
+        stockBadge.textContent = stock + " units";
+      }
+      qtyInput.max = stock > 0 ? stock : 1;
+    } else {
+      stockBadge.className = "badge bg-light text-secondary border stock-badge";
+      stockBadge.textContent = "0 units";
+      qtyInput.removeAttribute("max");
+    }
+
+    let qty = parseInt(qtyInput.value, 10);
+    if (isNaN(qty) || qty < 1) {
+      qty = 1;
+      qtyInput.value = 1;
+    }
+
+    if (hasProduct && stock > 0 && qty > stock) {
+      qtyInput.classList.add("is-invalid");
+    } else {
+      qtyInput.classList.remove("is-invalid");
+    }
+
+    const subtotal = hasProduct ? (price * qty) : 0;
+    subtotalInput.value = subtotal.toFixed(2);
+  }
+
+  function recalculateGrandTotals() {
+    let grandTotal = 0;
+    let totalUnits = 0;
+    let activeItemsCount = 0;
+    const rows = itemsBody.querySelectorAll(".item-row");
+
+    rows.forEach(row => {
+      const select = row.querySelector(".product-select");
+      const qtyInput = row.querySelector(".qty-input");
+      const subtotalInput = row.querySelector(".line-subtotal");
+
+      if (select.value) {
+        activeItemsCount++;
+        const qty = parseInt(qtyInput.value, 10) || 0;
+        totalUnits += qty;
+        grandTotal += parseFloat(subtotalInput.value) || 0;
+      }
+    });
+
+    grandTotalEl.textContent = formatCurrency(grandTotal);
+    itemCountEl.textContent = activeItemsCount;
+    unitsCountEl.textContent = totalUnits;
+    totalItemsBadge.textContent = activeItemsCount + " Item" + (activeItemsCount !== 1 ? "s" : "");
+
+    // Update delete buttons state: disable if only 1 row
+    const deleteButtons = itemsBody.querySelectorAll(".remove-row-btn");
+    deleteButtons.forEach(btn => {
+      btn.disabled = rows.length <= 1;
+    });
+  }
+
+  function attachRowListeners(row) {
+    const select = row.querySelector(".product-select");
+    const qtyInput = row.querySelector(".qty-input");
+    const removeBtn = row.querySelector(".remove-row-btn");
+
+    select.addEventListener("change", function() {
+      updateRowComputations(row);
+      recalculateGrandTotals();
+    });
+
+    qtyInput.addEventListener("input", function() {
+      updateRowComputations(row);
+      recalculateGrandTotals();
+    });
+
+    removeBtn.addEventListener("click", function() {
+      const rows = itemsBody.querySelectorAll(".item-row");
+      if (rows.length > 1) {
+        row.remove();
+        recalculateGrandTotals();
+      }
+    });
+  }
+
+  function addNewRow() {
+    const clone = rowTemplate.content.cloneNode(true);
+    const newRow = clone.querySelector(".item-row");
+    attachRowListeners(newRow);
+    itemsBody.appendChild(clone);
+    recalculateGrandTotals();
+  }
+
+  addBtnTop.addEventListener("click", addNewRow);
+  addBtnBottom.addEventListener("click", addNewRow);
+
+  // Initialize listeners for existing rows
+  itemsBody.querySelectorAll(".item-row").forEach(row => {
+    attachRowListeners(row);
+    updateRowComputations(row);
+  });
+  recalculateGrandTotals();
+
+  // Client-side form submit validation
+  saleForm.addEventListener("submit", function(e) {
+    valAlert.classList.add("d-none");
+    const customerSelect = document.getElementById("customer_id");
+    const employeeSelect = document.getElementById("employee_id");
+
+    if (!customerSelect.value) {
+      e.preventDefault();
+      valAlert.classList.remove("d-none");
+      valMsg.textContent = "Please select a customer for this transaction.";
+      customerSelect.focus();
+      return;
+    }
+
+    if (!employeeSelect.value) {
+      e.preventDefault();
+      valAlert.classList.remove("d-none");
+      valMsg.textContent = "Please select a cashier/employee for this transaction.";
+      employeeSelect.focus();
+      return;
+    }
+
+    const rows = itemsBody.querySelectorAll(".item-row");
+    let hasValidItem = false;
+    let hasStockIssue = false;
+
+    rows.forEach((row, i) => {
+      const select = row.querySelector(".product-select");
+      const qtyInput = row.querySelector(".qty-input");
+      if (select.value) {
+        hasValidItem = true;
+        const stock = parseInt(select.options[select.selectedIndex].getAttribute("data-stock") || 0, 10);
+        const qty = parseInt(qtyInput.value, 10) || 0;
+        if (qty > stock) {
+          hasStockIssue = true;
+          qtyInput.classList.add("is-invalid");
+        }
+      }
+    });
+
+    if (!hasValidItem) {
+      e.preventDefault();
+      valAlert.classList.remove("d-none");
+      valMsg.textContent = "Please select at least one product item to bill.";
+      return;
+    }
+
+    if (hasStockIssue) {
+      e.preventDefault();
+      valAlert.classList.remove("d-none");
+      valMsg.textContent = "One or more items exceed currently available warehouse stock.";
+      return;
+    }
+  });
+});
+</script>
+{% endblock %}

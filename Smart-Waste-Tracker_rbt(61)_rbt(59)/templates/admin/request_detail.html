@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ req.request_id }} Details - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('admin.requests') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Requests
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Primary Details & Worker Assignment -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Collection Request #{{ req.request_id }}</h4>
+                <span class="badge bg-{{ req.status | status_badge }} fs-6 px-3 py-2">{{ req.status }}</span>
+            </div>
+
+            <div class="row g-3 py-2 border-top border-bottom my-2">
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Citizen Name</small>
+                    <span class="fw-semibold">{{ req.citizen_name }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Contact Phone</small>
+                    <span>{{ req.citizen_phone or 'Not provided' }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Waste Classification</small>
+                    <span class="badge" style="background-color: {{ req.color_code or '#28a745' }}; font-size: 0.9rem;">
+                        {{ req.category_name }}
+                    </span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Service Area</small>
+                    <span class="fw-semibold">{{ req.area_name }} ({{ req.locality or 'General' }}, PIN: {{ req.postal_code }})</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Estimated Quantity</small>
+                    <span class="fw-bold text-dark">{{ req.estimated_quantity_kg }} kg</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Actual Measured Quantity</small>
+                    <span class="fw-bold text-success">{{ req.actual_quantity_kg or 'Pending pickup measurement' }} {% if req.actual_quantity_kg %}kg{% endif %}</span>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted d-block">Pickup Address</small>
+                    <p class="mb-0 text-dark">{{ req.pickup_address }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Preferred Pickup Date</small>
+                    <span class="fw-semibold text-primary"><i class="bi bi-calendar-event me-1"></i>{{ req.preferred_date | format_date }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Submitted Timestamp</small>
+                    <span class="text-muted small">{{ req.created_at | format_date('%d %b %Y %H:%M') }}</span>
+                </div>
+                {% if req.notes %}
+                <div class="col-12">
+                    <small class="text-muted d-block">Citizen Special Instructions</small>
+                    <div class="p-2 bg-light rounded text-secondary small">{{ req.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Worker Assignment Card / Info -->
+            <div class="mt-4">
+                <h5 class="fw-bold text-dark mb-3">Sanitation Worker Assignment</h5>
+                {% if req.status == 'Pending' %}
+                    <form method="POST" action="{{ url_for('admin.assign_request_worker', request_id=req.request_id) }}" class="p-3 bg-light rounded-3 border">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <label for="worker_id" class="form-label fw-semibold small">Assign Available Worker</label>
+                        <div class="input-group">
+                            <select name="worker_id" id="worker_id" class="form-select" required>
+                                <option value="">Select available sanitation worker...</option>
+                                {% for w in available_workers %}
+                                    <option value="{{ w.worker_id }}">{{ w.full_name }} ({{ w.phone or 'No phone' }}) - {{ w.total_collections }} tasks</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-success fw-semibold">
+                                <i class="bi bi-person-check me-1"></i> Dispatch Worker
+                            </button>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Assigning dispatches the worker and transitions request status to <code>Assigned</code>.</small>
+                    </form>
+                {% elif req.worker_name %}
+                    <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small d-block">Currently Assigned Worker</span>
+                            <span class="fw-bold text-dark fs-5"><i class="bi bi-person-badge text-success me-1"></i>{{ req.worker_name }}</span>
+                            <small class="text-muted d-block">Phone: {{ req.worker_phone or 'N/A' }} • Assigned at: {{ req.assigned_at | format_date('%d %b %Y %H:%M') }}</small>
+                        </div>
+                        <span class="badge bg-primary px-3 py-2">{{ req.assignment_status }}</span>
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">No worker assigned (Status: {{ req.status }}).</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Segregation & Recycling Records -->
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3">Waste Segregation Audit Details</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Category</th>
+                            <th>Weight</th>
+                            <th>Correct Segregation?</th>
+                            <th>Audit Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sr in segregation_records %}
+                        <tr>
+                            <td class="fw-semibold">{{ sr.category_name }}</td>
+                            <td>{{ sr.quantity_kg }} kg</td>
+                            <td>
+                                {% if sr.is_correctly_segregated is not none %}
+                                    {% if sr.is_correctly_segregated %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No (Mixed)</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Unverified</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-{{ sr.segregation_status | status_badge }}">{{ sr.segregation_status }}</span></td>
+                            <td class="small text-muted">{{ sr.remarks or '—' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No physical segregation audit logged yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Status Audit Trail & Feedback -->
+    <div class="col-lg-5">
+        <!-- Status History Timeline -->
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-1 text-success"></i> Status Transition History</h5>
+            <div class="timeline ps-2">
+                {% for h in history %}
+                <div class="border-start border-2 border-success ps-3 pb-3 position-relative">
+                    <div class="position-absolute translate-middle-x bg-success rounded-circle" style="width: 10px; height: 10px; left: -1px; top: 4px;"></div>
+                    <span class="badge bg-{{ h.new_status | status_badge }}">{{ h.new_status }}</span>
+                    {% if h.previous_status %}
+                        <small class="text-muted ms-1">(from {{ h.previous_status }})</small>
+                    {% endif %}
+                    <small class="text-muted d-block mt-1">{{ h.changed_at | format_date('%d %b %Y, %H:%M') }}</small>
+                    <p class="text-secondary small mb-0 mt-1">{{ h.remarks or 'Status update executed' }}</p>
+                    {% if h.changed_by_name %}
+                        <small class="text-muted">By: {{ h.changed_by_name }}</small>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted small">No audit history entries found.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Citizen Feedback -->
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <h5 class="fw-bold mb-3"><i class="bi bi-star me-1 text-warning"></i> Citizen Rating & Review</h5>
+            {% if feedback %}
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="mb-2">
+                        {% for i in range(feedback.rating) %}
+                            <i class="bi bi-star-fill text-warning fs-5"></i>
+                        {% endfor %}
+                        {% for i in range(5 - feedback.rating) %}
+                            <i class="bi bi-star text-muted fs-5"></i>
+                        {% endfor %}
+                        <span class="fw-bold ms-2 fs-6">({{ feedback.rating }} / 5)</span>
+                    </div>
+                    <p class="mb-1 text-dark fst-italic">"{{ feedback.comments or 'No written comments.' }}"</p>
+                    <small class="text-muted d-block mt-2">Submitted on {{ feedback.submitted_at | format_date('%d %b %Y') }}</small>
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">No citizen feedback submitted for this collection yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

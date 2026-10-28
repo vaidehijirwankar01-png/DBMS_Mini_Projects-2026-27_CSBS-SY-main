@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found (404){% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="display-1 fw-bold text-primary mb-3">404</div>
+    <h3 class="fw-bold mb-2">Resource Not Found</h3>
+    <p class="text-muted mb-4">The academic page or database entity you requested does not exist.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+        <i class="bi bi-house-door me-1"></i> Return to Dashboard
+    </a>
+</div>
+{% endblock %}

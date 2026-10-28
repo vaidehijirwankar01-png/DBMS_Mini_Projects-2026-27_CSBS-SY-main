@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My orders</h2>
+{% for o in orders %}
+<div class="card">
+  <b>Order #{{ o.order_id }}</b> - {{ o.order_date }} - Status: <b>{{ o.status }}</b><br>
+  Deliver to: {{ o.delivery_address }}
+  <table>
+    <tr><th>#</th><th>Product</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr>
+    {% for l in by_order.get(o.order_id, []) %}
+    <tr><td>{{ l.line_no }}</td><td>{{ l.name }}</td><td>{{ l.quantity }} {{ l.unit }}</td>
+        <td>{{ l.price }} / {{ l.unit }}</td><td>{{ l.subtotal }}</td></tr>
+    {% endfor %}
+    <tr><th colspan="4">Total</th><th>Rs {{ o.total_price }}</th></tr>
+  </table>
+  {% if o.status == 'Placed' %}
+    <form class="inline" method="post" action="{{ url_for('consumer_pay', oid=o.order_id) }}">
+      <select name="payment_method"><option>UPI</option><option>Card</option><option>NetBanking</option><option>Cash on Delivery</option></select>
+      <button>Pay Rs {{ o.total_price }}</button>
+    </form>
+    <form class="inline" method="post" action="{{ url_for('consumer_cancel', oid=o.order_id) }}">
+      <button class="red">Cancel Order</button>
+    </form>
+  {% endif %}
+  {% if o.payment_id %}Paid via {{ o.payment_method }} (Txn: {{ o.transaction_id }}){% endif %}
+  {% if o.tracking_id %}<br>Delivery: {{ o.delivery_partner }}, Tracking {{ o.tracking_id }}, Date {{ o.delivery_date or 'TBD' }}{% endif %}
+</div>
+{% else %}<p>You have not placed any orders.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">College Overview Dashboard</h3>
+        <p class="text-muted small mb-0">Real-time academic metrics queried live from MySQL database <code>college_management</code></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('reports') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-diagram-3 me-1"></i> View JOIN Reports
+        </a>
+        <a href="{{ url_for('cursor_demo') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-repeat me-1"></i> Run Cursor Summary
+        </a>
+    </div>
+</div>
+
+<!-- Primary Key Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Total Students</span>
+                <h3 class="fw-bold text-dark my-1">{{ stats.get('total_students', 0) }}</h3>
+                <small class="text-success"><i class="bi bi-check-circle"></i> Active Enrolled</small>
+            </div>
+            <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Total Faculty</span>
+                <h3 class="fw-bold text-dark my-1">{{ stats.get('total_faculty', 0) }}</h3>
+                <small class="text-info"><i class="bi bi-person-badge"></i> Teaching Staff</small>
+            </div>
+            <div class="stat-icon-wrapper bg-info bg-opacity-10 text-info">
+                <i class="bi bi-mortarboard"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Departments</span>
+                <h3 class="fw-bold text-dark my-1">{{ stats.get('total_departments', 0) }}</h3>
+                <small class="text-secondary"><i class="bi bi-building"></i> Academic Units</small>
+            </div>
+            <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning">
+                <i class="bi bi-building-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card d-flex align-items-center justify-content-between">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Courses Offered</span>
+                <h3 class="fw-bold text-dark my-1">{{ stats.get('total_courses', 0) }}</h3>
+                <small class="text-primary"><i class="bi bi-book"></i> Active Curriculum</small>
+            </div>
+            <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success">
+                <i class="bi bi-book-fill"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary KPI row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 bg-primary text-white shadow-sm h-100">
+            <div class="card-body p-4">
+                <span class="text-white-50 text-uppercase small fw-bold">Total Fees Invoiced</span>
+                <h2 class="fw-bold my-2">₹{{ "{:,.2f}".format(stats.get('total_fee', 0)) }}</h2>
+                <small class="text-white-70"><i class="bi bi-receipt"></i> Cumulative academic dues across all batches</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 bg-success text-white shadow-sm h-100">
+            <div class="card-body p-4">
+                <span class="text-white-50 text-uppercase small fw-bold">Total Fees Collected</span>
+                <h2 class="fw-bold my-2">₹{{ "{:,.2f}".format(stats.get('total_paid', 0)) }}</h2>
+                <small class="text-white-70"><i class="bi bi-check2-circle"></i> Successfully deposited into college accounts</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 col-xl-4">
+        <div class="card border-0 bg-danger text-white shadow-sm h-100">
+            <div class="card-body p-4">
+                <span class="text-white-50 text-uppercase small fw-bold">Total Pending Balances</span>
+                <h2 class="fw-bold my-2">₹{{ "{:,.2f}".format(stats.get('total_pending', 0)) }}</h2>
+                <small class="text-white-70"><i class="bi bi-exclamation-octagon"></i> Outstanding balance tracked by triggers</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Visualizations -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart-fill me-2 text-primary"></i> Department-wise Student Strength</span>
+                <span class="badge bg-light text-secondary border">SQL Aggregate</span>
+            </div>
+            <div class="card-body">
+                <canvas id="deptChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-pie-chart-fill me-2 text-primary"></i> Fee Recovery Ratio</span>
+                <span class="badge bg-light text-secondary border">Real Balance</span>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <div style="width: 220px; height: 220px;">
+                    <canvas id="feeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Records & Live Audit Log -->
+<div class="row g-3">
+    <!-- Recent Student Admissions -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-plus-fill me-2 text-primary"></i> Recent Student Enrollments</span>
+                <a href="{{ url_for('students') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Sem</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in stats.get('recent_students', []) %}
+                        <tr>
+                            <td><code>{{ s.roll_number }}</code></td>
+                            <td class="fw-semibold">{{ s.full_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ s.department_name }}</span></td>
+                            <td>Sem {{ s.semester }}</td>
+                            <td>
+                                <a href="{{ url_for('view_student', student_id=s.student_id) }}" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.8rem;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">No students found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Audit Trail Log (Trigger demonstration) -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-check me-2 text-primary"></i> Live Trigger Audit Trail (student_audit_log)</span>
+                <a href="{{ url_for('triggers') }}" class="btn btn-sm btn-link text-decoration-none">Trigger View</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>Audit Summary</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in stats.get('recent_audits', []) %}
+                        <tr>
+                            <td>
+                                {% if a.action_type == 'INSERT' %}
+                                    <span class="badge bg-success">INSERT</span>
+                                {% elif a.action_type == 'UPDATE' %}
+                                    <span class="badge bg-warning text-dark">UPDATE</span>
+                                {% else %}
+                                    <span class="badge bg-danger">DELETE</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ a.performed_by.split('@')[0] }}</small></td>
+                            <td class="small text-truncate" style="max-width: 200px;" title="{{ a.details }}">
+                                {{ a.details }}
+                            </td>
+                            <td><small class="text-muted">{{ a.action_timestamp.strftime('%H:%M:%S') if a.action_timestamp else '' }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">No audit records yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Department Distribution Bar Chart
+    const deptLabels = [
+        {% for d in stats.get('dept_distribution', []) %}
+            "{{ d.department_name }}",
+        {% endfor %}
+    ];
+    const deptData = [
+        {% for d in stats.get('dept_distribution', []) %}
+            {{ d.student_count }},
+        {% endfor %}
+    ];
+
+    const ctxDept = document.getElementById('deptChart');
+    if (ctxDept) {
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    label: 'Enrolled Students',
+                    data: deptData,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Fee Collection Doughnut Chart
+    const paid = {{ stats.get('total_paid', 0) }};
+    const pending = {{ stats.get('total_pending', 0) }};
+    const ctxFee = document.getElementById('feeChart');
+    if (ctxFee) {
+        new Chart(ctxFee, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fees Collected', 'Pending Balances'],
+                datasets: [{
+                    data: [paid, pending],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

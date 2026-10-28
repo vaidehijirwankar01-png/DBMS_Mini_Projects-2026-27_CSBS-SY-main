@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CRM Management System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">CRM<span>.</span></div>
+
+        <p class="menu-heading">MAIN MENU</p>
+
+        <nav>
+            <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+            <button class="nav-btn" data-page="customers">Customers</button>
+            <button class="nav-btn" data-page="employees">Employees</button>
+            <button class="nav-btn" data-page="leads">Leads</button>
+            <button class="nav-btn" data-page="products">Products</button>
+            <button class="nav-btn" data-page="deals">Deals</button>
+            <button class="nav-btn" data-page="interactions">Interactions</button>
+        </nav>
+
+        <div class="sidebar-footer">
+            Local CRM System<br>
+            <small>MySQL Database</small>
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div>
+                <h1 id="pageTitle">Dashboard</h1>
+                <p>Manage your customer relationships.</p>
+            </div>
+
+            <div class="admin-badge">
+                <span class="admin-avatar">A</span>
+                <span>Administrator</span>
+            </div>
+
+        </header>
+
+
+        <div id="notification" class="notification" role="status"></div>
+
+
+        <!-- DASHBOARD -->
+
+        <section id="dashboard" class="page">
+
+            <div class="stats-grid">
+
+                <article class="stat-card">
+                    <p>Total Customers</p>
+                    <h2 id="customerCount">—</h2>
+                    <span>Registered customers</span>
+                </article>
+
+                <article class="stat-card">
+                    <p>Total Employees</p>
+                    <h2 id="employeeCount">—</h2>
+                    <span>Team members</span>
+                </article>
+
+                <article class="stat-card">
+                    <p>Total Leads</p>
+                    <h2 id="leadCount">—</h2>
+                    <span>Potential opportunities</span>
+                </article>
+
+                <article class="stat-card">
+                    <p>Closed Sales</p>
+                    <h2 id="salesAmount">—</h2>
+                    <span>Closed-won deal value</span>
+                </article>
+
+            </div>
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Recent Deals</h2>
+                        <p>Latest deals recorded in your database.</p>
+                    </div>
+
+                    <button class="secondary-btn" data-go="deals">
+                        View All Deals
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Stage</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recentDeals">
+                            <tr>
+                                <td colspan="5">Loading deals...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CUSTOMERS -->
+
+        <section id="customers" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Customers</h2>
+                        <p>Manage your customer information.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addCustomerBtn">
+                        + Add Customer
+                    </button>
+                </div>
+
+                <input
+                    class="search-input"
+                    id="customerSearch"
+                    type="search"
+                    placeholder="Search by name, email or city..."
+                >
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="customerTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- EMPLOYEES -->
+
+        <section id="employees" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Employees</h2>
+                        <p>Manage employees and departments.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addEmployeeBtn">
+                        + Add Employee
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="employeeTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- LEADS -->
+
+        <section id="leads" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Leads</h2>
+                        <p>Track potential customers and their status.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addLeadBtn">
+                        + Add Lead
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer ID</th>
+                                <th>Employee ID</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="leadTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PRODUCTS -->
+
+        <section id="products" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Products</h2>
+                        <p>Manage products, pricing and stock.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addProductBtn">
+                        + Add Product
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="productTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DEALS -->
+
+        <section id="deals" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Deals</h2>
+                        <p>Track sales opportunities and deal stages.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addDealBtn">
+                        + Add Deal
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer ID</th>
+                                <th>Employee ID</th>
+                                <th>Product ID</th>
+                                <th>Amount</th>
+                                <th>Stage</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="dealTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- INTERACTIONS -->
+
+        <section id="interactions" class="page hidden">
+
+            <div class="panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h2>Interactions</h2>
+                        <p>Record customer calls, emails and meetings.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addInteractionBtn">
+                        + Add Interaction
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer ID</th>
+                                <th>Employee ID</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="interactionTable"></tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ADD / EDIT FORM -->
+
+    <dialog id="recordDialog">
+
+        <form id="recordForm">
+
+            <div class="dialog-heading">
+
+                <div>
+                    <h2 id="formTitle">Add Record</h2>
+                    <p>Enter the record details below.</p>
+                </div>
+
+                <button type="button" id="closeDialog" class="close-btn">
+                    &times;
+                </button>
+
+            </div>
+
+            <div id="formFields" class="form-grid"></div>
+
+            <div class="dialog-actions">
+
+                <button type="button" id="cancelBtn" class="secondary-btn">
+                    Cancel
+                </button>
+
+                <button type="submit" id="saveBtn" class="primary-btn">
+                    Save Record
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

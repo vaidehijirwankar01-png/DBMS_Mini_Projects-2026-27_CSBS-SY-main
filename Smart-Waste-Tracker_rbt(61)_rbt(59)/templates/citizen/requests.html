@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}My Collection Requests - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">My Collection Requests</h3>
+        <p class="text-muted small mb-0">Track pickup progress, review worker notes, and inspect segregation feedback</p>
+    </div>
+    <a href="{{ url_for('citizen.new_request') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-1"></i> New Request
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm rounded-3 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('citizen.requests') }}" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Requests</option>
+                <option value="Pending" {% if current_status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Assigned" {% if current_status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                <option value="In Progress" {% if current_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Collected" {% if current_status == 'Collected' %}selected{% endif %}>Collected</option>
+                <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Cancelled" {% if current_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Req #</th>
+                    <th>Waste Category</th>
+                    <th>Est. Weight</th>
+                    <th>Pickup Address</th>
+                    <th>Preferred Date</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in requests %}
+                <tr>
+                    <td class="fw-bold">#{{ r.request_id }}</td>
+                    <td>
+                        <span class="badge" style="background-color: {{ r.color_code or '#28a745' }};">
+                            {{ r.category_name }}
+                        </span>
+                    </td>
+                    <td>{{ r.estimated_quantity_kg }} kg</td>
+                    <td class="small text-secondary">{{ r.pickup_address[:40] }}{% if r.pickup_address|length > 40 %}...{% endif %}</td>
+                    <td>{{ r.preferred_date | format_date }}</td>
+                    <td>
+                        <span class="badge bg-{{ r.status | status_badge }}">{{ r.status }}</span>
+                    </td>
+                    <td class="text-muted small">{{ r.created_at | format_date }}</td>
+                    <td>
+                        <a href="{{ url_for('citizen.request_detail', request_id=r.request_id) }}" class="btn btn-sm btn-outline-success">
+                            Details & Feedback
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                        No collection requests match your selection.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

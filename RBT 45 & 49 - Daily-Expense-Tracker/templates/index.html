@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}All expenses{% endblock %}
+
+{% block content %}
+<h1>All expenses</h1>
+
+{% if expenses %}
+<table border="1">
+    <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Note</th>
+        <th>Actions</th>
+    </tr>
+
+    <!-- One table row for each expense -->
+    {% for expense in expenses %}
+    <tr>
+        <td>{{ expense.expense_date }}</td>
+        <td>{{ expense.category }}</td>
+        <td>{{ expense.amount }}</td>
+        <td>{{ expense.note }}</td>
+        <td>
+            <a href="/edit/{{ expense.expense_id }}">Edit</a>
+
+            <!-- Delete uses POST and asks for confirmation first -->
+            <form method="post" action="/delete/{{ expense.expense_id }}" onsubmit="return confirm('Delete this expense?')">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No expenses yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+digraph ER { rankdir=TB; graph[fontname="Times-Roman",nodesep=0.9,ranksep=0.8,pad=0.3]; node[shape=plaintext,fontname="Times-Roman",fontsize=13]; edge[fontname="Times-Roman",fontsize=12,arrowhead=none];
+Member [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#1f3a6e"><FONT COLOR="white"><B>MEMBER</B></FONT></TD></TR><HR/><TR><TD ALIGN="LEFT"><U>Member_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT">Name</TD></TR><TR><TD ALIGN="LEFT">Department</TD></TR><TR><TD ALIGN="LEFT">Phone (UNIQUE)</TD></TR><TR><TD ALIGN="LEFT">Joined_On</TD></TR></TABLE>>];
+Book [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#1f3a6e"><FONT COLOR="white"><B>BOOK</B></FONT></TD></TR><HR/><TR><TD ALIGN="LEFT"><U>Book_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT">Title</TD></TR><TR><TD ALIGN="LEFT">Author</TD></TR><TR><TD ALIGN="LEFT">Category</TD></TR><TR><TD ALIGN="LEFT">Quantity (CHECK &gt;= 0)</TD></TR></TABLE>>];
+Issue [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#c8962e"><B>ISSUE</B></TD></TR><HR/><TR><TD ALIGN="LEFT" PORT="id"><U>Issue_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT" PORT="m">Member_ID (FK)</TD></TR><TR><TD ALIGN="LEFT" PORT="b">Book_ID (FK)</TD></TR><TR><TD ALIGN="LEFT">Issue_Date</TD></TR><TR><TD ALIGN="LEFT">Due_Date</TD></TR><TR><TD ALIGN="LEFT">Return_Date (NULL = open)</TD></TR><TR><TD ALIGN="LEFT">Renewed (0/1)</TD></TR></TABLE>>];
+Fine [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#1f3a6e"><FONT COLOR="white"><B>FINE</B></FONT></TD></TR><HR/><TR><TD ALIGN="LEFT"><U>Fine_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT" PORT="i">Issue_ID (FK, UNIQUE)</TD></TR><TR><TD ALIGN="LEFT">Amount (CHECK &gt;= 0)</TD></TR><TR><TD ALIGN="LEFT">Paid</TD></TR></TABLE>>];
+Lib [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#5b6b8c"><FONT COLOR="white"><B>LIBRARIAN</B></FONT></TD></TR><HR/><TR><TD ALIGN="LEFT"><U>Librarian_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT">Username (UNIQUE)</TD></TR><TR><TD ALIGN="LEFT">Full_Name</TD></TR><TR><TD ALIGN="LEFT">Password_Hash</TD></TR><TR><TD ALIGN="LEFT">Role (admin / librarian)</TD></TR></TABLE>>];
+Log [label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3"><TR><TD BGCOLOR="#5b6b8c"><FONT COLOR="white"><B>AUDIT_LOG</B></FONT></TD></TR><HR/><TR><TD ALIGN="LEFT"><U>Log_ID</U> (PK)</TD></TR><TR><TD ALIGN="LEFT">Username</TD></TR><TR><TD ALIGN="LEFT">Action</TD></TR><TR><TD ALIGN="LEFT">Detail</TD></TR><TR><TD ALIGN="LEFT">Logged_At</TD></TR></TABLE>>];
+{rank=same; Member; Book}
+{rank=same; Issue; Lib}
+{rank=same; Fine; Log}
+Issue -> Lib [style=invis];
+Fine -> Log [style=invis];
+Member -> Issue:m [headlabel="N ",taillabel=" 1 ",label=" borrows"];
+Book -> Issue:b [headlabel="N ",taillabel=" 1 ",label=" is issued in"];
+Issue -> Fine:i [headlabel=" 1",taillabel=" 1 ",label=" may incur"];
+Lib -> Log [style=dashed,label=" records actions\n (by username)"];
+}

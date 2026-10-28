@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Completed Tasks History - Worker - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Completed Collections History</h3>
+        <p class="text-muted small mb-0">Record of all collections you have fulfilled, including citizen ratings</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Req #</th>
+                    <th>Citizen</th>
+                    <th>Category</th>
+                    <th>Area</th>
+                    <th>Est. / Act. Weight</th>
+                    <th>Completion Date</th>
+                    <th>Citizen Review</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in completed_tasks %}
+                <tr>
+                    <td class="fw-bold">#{{ t.request_id }}</td>
+                    <td>{{ t.citizen_name }}</td>
+                    <td>
+                        <span class="badge" style="background-color: {{ t.color_code or '#28a745' }};">
+                            {{ t.category_name }}
+                        </span>
+                    </td>
+                    <td>{{ t.area_name }}</td>
+                    <td>
+                        <span class="fw-semibold text-success">{{ t.actual_quantity_kg or t.estimated_quantity_kg }} kg</span>
+                    </td>
+                    <td>{{ t.completed_at | format_date('%d %b %Y %H:%M') }}</td>
+                    <td>
+                        {% if t.rating %}
+                            <span class="text-warning"><i class="bi bi-star-fill"></i> {{ t.rating }}/5</span>
+                            {% if t.comments %}
+                                <small class="text-muted d-block fst-italic">"{{ t.comments[:30] }}..."</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted small">No rating</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        No completed task history found yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

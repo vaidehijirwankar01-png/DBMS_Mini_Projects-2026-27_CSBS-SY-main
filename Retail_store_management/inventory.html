@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Stock - Retail Store Management System{% endblock %}
+{% block page_title %}Inventory &amp; Stock Tracking{% endblock %}
+{% block page_subtitle %}Live warehouse product stock levels, valuation, and low stock monitoring{% endblock %}
+
+{% block content %}
+<!-- Live Stock Summary KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card border-start border-4 border-primary">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-label">Total Stock Units</span>
+          <div class="stat-value text-primary mt-1">{{ summary.total_units }}</div>
+          <small class="text-muted"><i class="bi bi-boxes me-1"></i>Units in warehouse</small>
+        </div>
+        <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+          <i class="bi bi-box-seam"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card border-start border-4 border-success">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-label">Inventory Valuation</span>
+          <div class="stat-value text-success mt-1">₹{{ "%.2f"|format(summary.total_valuation) }}</div>
+          <small class="text-muted"><i class="bi bi-cash-stack me-1"></i>&Sigma;(qty &times; price)</small>
+        </div>
+        <div class="stat-icon-wrapper bg-success-subtle text-success">
+          <i class="bi bi-currency-rupee"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card border-start border-4 border-warning">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-label">Low Stock (&lt; 10)</span>
+          <div class="stat-value text-warning mt-1">{{ summary.total_low_stock_count }}</div>
+          <small class="text-muted"><i class="bi bi-exclamation-triangle me-1"></i>Requires reorder</small>
+        </div>
+        <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+          <i class="bi bi-bell"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card border-start border-4 border-info">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="stat-label">In Stock (&ge; 10)</span>
+          <div class="stat-value text-info mt-1">{{ summary.in_stock_count }}</div>
+          <small class="text-muted"><i class="bi bi-shield-check me-1"></i>Healthy stock lines</small>
+        </div>
+        <div class="stat-icon-wrapper bg-info-subtle text-info">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Low Stock Warning Alert if any item is below 10 -->
+{% if summary.total_low_stock_count > 0 and stock_filter != 'low_stock' %}
+<div class="alert alert-warning border border-warning-subtle d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+    <div>
+      <strong>Low Stock Alert:</strong> There are <strong>{{ summary.total_low_stock_count }}</strong> product(s) with quantity below the threshold of 10 units.
+    </div>
+  </div>
+  <a href="{{ url_for('inventory', stock='low_stock') }}" class="btn btn-warning btn-sm text-dark fw-bold">
+    <i class="bi bi-filter me-1"></i> View Low Stock Items
+  </a>
+</div>
+{% endif %}
+
+<!-- Search and Filter Bar Card -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <form method="GET" action="{{ url_for('inventory') }}" class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-12 col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-muted border-end-0">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" 
+                 name="q" 
+                 class="form-control border-start-0" 
+                 placeholder="Search product, category, or supplier..." 
+                 value="{{ search_query }}">
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="col-6 col-md-3">
+        <select name="category_id" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.category_id }}" {{ 'selected' if selected_category|string == cat.category_id|string else '' }}>
+              {{ cat.category_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Stock Status Filter Dropdown -->
+      <div class="col-6 col-md-3">
+        <select name="stock" class="form-select">
+          <option value="" {{ 'selected' if not stock_filter else '' }}>All Stock Statuses</option>
+          <option value="low_stock" {{ 'selected' if stock_filter == 'low_stock' else '' }}>⚠️ Low Stock (&lt; 10 units)</option>
+          <option value="out_of_stock" {{ 'selected' if stock_filter == 'out_of_stock' else '' }}>❌ Out of Stock (0 units)</option>
+          <option value="in_stock" {{ 'selected' if stock_filter == 'in_stock' else '' }}>✅ In Stock (&ge; 10 units)</option>
+        </select>
+      </div>
+
+      <!-- Submit and Reset Buttons -->
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-funnel me-1"></i> Filter
+        </button>
+        {% if search_query or stock_filter or selected_category %}
+          <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary" title="Reset all filters">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Stock Quick-Filter Pill Tabs -->
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center justify-content-between">
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('inventory') }}" 
+       class="btn btn-sm {{ 'btn-dark' if not stock_filter else 'btn-outline-secondary' }}">
+      All Products <span class="badge bg-secondary ms-1">{{ summary.total_products }}</span>
+    </a>
+
+    <!-- Required Low Stock Filter Button -->
+    <a href="{{ url_for('inventory', stock='low_stock') }}" 
+       class="btn btn-sm {{ 'btn-warning text-dark fw-bold' if stock_filter == 'low_stock' else 'btn-outline-warning text-dark' }}">
+      <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Low Stock (&lt; 10) 
+      <span class="badge bg-warning text-dark ms-1">{{ summary.total_low_stock_count }}</span>
+    </a>
+
+    <a href="{{ url_for('inventory', stock='out_of_stock') }}" 
+       class="btn btn-sm {{ 'btn-danger' if stock_filter == 'out_of_stock' else 'btn-outline-danger' }}">
+      <i class="bi bi-x-circle me-1"></i> Out of Stock (0)
+      <span class="badge bg-danger ms-1">{{ summary.out_of_stock_count }}</span>
+    </a>
+
+    <a href="{{ url_for('inventory', stock='in_stock') }}" 
+       class="btn btn-sm {{ 'btn-success' if stock_filter == 'in_stock' else 'btn-outline-success' }}">
+      <i class="bi bi-check-circle me-1"></i> In Stock (&ge; 10)
+      <span class="badge bg-success ms-1">{{ summary.in_stock_count }}</span>
+    </a>
+  </div>
+
+  <div class="small text-muted">
+    Showing <strong>{{ products | length }}</strong> of <strong>{{ summary.total_products }}</strong> products
+  </div>
+</div>
+
+<!-- Active Filter Notice -->
+{% if search_query or stock_filter or selected_category %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="small text-muted">
+    Filtered by:
+    {% if stock_filter == 'low_stock' %}<span class="badge bg-warning text-dark border ms-1">Low Stock (&lt; 10)</span>{% endif %}
+    {% if stock_filter == 'out_of_stock' %}<span class="badge bg-danger text-white border ms-1">Out of Stock (0)</span>{% endif %}
+    {% if stock_filter == 'in_stock' %}<span class="badge bg-success text-white border ms-1">In Stock (&ge; 10)</span>{% endif %}
+    {% if search_query %}<span class="badge bg-light text-dark border ms-1">Keyword: "{{ search_query }}"</span>{% endif %}
+    {% if selected_category %}<span class="badge bg-light text-dark border ms-1">Category Filter</span>{% endif %}
+  </div>
+  <a href="{{ url_for('inventory') }}" class="btn btn-link btn-sm text-decoration-none p-0">Clear all filters</a>
+</div>
+{% endif %}
+
+<!-- Inventory Table Card -->
+<div class="content-card">
+  <div class="content-card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+    <div class="content-card-title">
+      <i class="bi bi-boxes text-primary"></i>
+      <span>Warehouse Inventory Catalog ({{ products | length }} Listed)</span>
+    </div>
+    <span class="badge bg-light text-secondary border">Source: <code>Product</code> Table</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table custom-table align-middle">
+      <thead>
+        <tr>
+          <th>Product Name</th>
+          <th>Category</th>
+          <th>Supplier</th>
+          <th class="text-end">Price</th>
+          <th class="text-center">Current Quantity</th>
+          <th>Stock Status</th>
+          <th class="text-end">Stock Value</th>
+          <th class="text-end pe-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <!-- Product Name & ID -->
+          <td>
+            <div class="fw-bold text-dark">{{ p.product_name }}</div>
+            <small class="text-muted font-monospace">SKU #{{ p.product_id }}</small>
+          </td>
+
+          <!-- Category -->
+          <td>
+            <span class="badge bg-light text-secondary border">{{ p.category_name }}</span>
+          </td>
+
+          <!-- Supplier -->
+          <td>
+            <div class="fw-medium text-dark">{{ p.supplier_name }}</div>
+            {% if p.supplier_phone %}
+              <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ p.supplier_phone }}</small>
+            {% endif %}
+          </td>
+
+          <!-- Price -->
+          <td class="text-end font-monospace fw-semibold">
+            ₹{{ "%.2f"|format(p.price) }}
+          </td>
+
+          <!-- Current Quantity -->
+          <td class="text-center">
+            <span class="fw-bold fs-6 {{ 'text-danger' if p.quantity == 0 else ('text-warning-emphasis' if p.quantity < 10 else 'text-success') }}">
+              {{ p.quantity }}
+            </span>
+            <small class="text-muted d-block" style="font-size: 0.72rem;">units</small>
+          </td>
+
+          <!-- Stock Status Badge strictly per prompt requirements:
+               quantity = 0 -> Out of Stock
+               quantity < 10 -> Low Stock
+               quantity >= 10 -> In Stock -->
+          <td>
+            {% if p.quantity == 0 %}
+              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                <i class="bi bi-x-circle-fill me-1"></i> Out of Stock
+              </span>
+            {% elif p.quantity < 10 %}
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Low Stock
+              </span>
+            {% else %}
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                <i class="bi bi-check-circle-fill me-1"></i> In Stock
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Stock Valuation (quantity * price) -->
+          <td class="text-end font-monospace fw-bold text-dark">
+            ₹{{ "%.2f"|format(p.inventory_value) }}
+          </td>
+
+          <!-- Actions -->
+          <td class="text-end pe-3">
+            <a href="{{ url_for('edit_product', product_id=p.product_id) }}" 
+               class="btn btn-outline-secondary btn-sm" 
+               title="Update stock or price">
+              <i class="bi bi-pencil me-1"></i> Restock
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5">
+            <div class="text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+              <h6 class="fw-bold text-dark">No Products Found In Inventory</h6>
+              {% if stock_filter or search_query or selected_category %}
+                <p class="small mb-3">No products match your active filter criteria.</p>
+                <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary btn-sm">Clear All Filters</a>
+              {% else %}
+                <p class="small mb-3">The product catalog is currently empty.</p>
+                <a href="{{ url_for('products') }}" class="btn btn-primary btn-sm">Go to Products Module</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

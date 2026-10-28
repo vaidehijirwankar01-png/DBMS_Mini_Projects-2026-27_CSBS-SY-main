@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Waste Segregation Guide - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold mb-1">Interactive Waste Segregation Guide</h3>
+    <p class="text-muted small mb-0">Learn how to properly classify and separate waste at source to support community recycling</p>
+</div>
+
+<div class="row g-4">
+    {% for cat in categories %}
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white border-top border-4" style="border-top-color: {{ cat.color_code or '#28a745' }} !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge px-3 py-2 fs-6" style="background-color: {{ cat.color_code or '#28a745' }};">
+                    {{ cat.category_name }}
+                </span>
+                <span class="rounded-circle border" style="width: 24px; height: 24px; background-color: {{ cat.color_code }};"></span>
+            </div>
+            <h5 class="fw-bold text-dark">{{ cat.category_name }} Waste</h5>
+            <p class="text-secondary small mb-3">{{ cat.description }}</p>
+
+            <div class="p-3 bg-light rounded-3 mt-auto">
+                <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-check2-circle text-success me-1"></i> How to Segregate:</h6>
+                <p class="text-muted small mb-0">{{ cat.segregation_instructions }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mt-4 border-start border-success border-4">
+    <h5 class="fw-bold text-success mb-2"><i class="bi bi-recycle me-1"></i> Why Segregation Matters</h5>
+    <p class="text-muted small mb-0">
+        Proper waste segregation at source reduces the burden on landfills, protects sanitation personnel from hazardous materials, and enables efficient recovery of recyclable paper, plastics, and metals. Composted wet organic waste produces fertile soil manure for urban agriculture.
+    </p>
+</div>
+{% endblock %}
+

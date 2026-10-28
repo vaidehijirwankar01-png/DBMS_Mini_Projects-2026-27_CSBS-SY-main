@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Employee #{{ employee.employee_id }} - Retail Store Management System{% endblock %}
+{% block page_title %}Edit Employee{% endblock %}
+{% block page_subtitle %}Update staff details and role assignments in MySQL{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div class="content-card-title">
+          <i class="bi bi-pencil-square text-primary"></i>
+          <span>Edit Employee: <strong>{{ employee.employee_name }}</strong></span>
+        </div>
+        <span class="badge bg-light text-dark border font-monospace">Employee ID: #{{ employee.employee_id }}</span>
+      </div>
+
+      <div class="content-card-body p-4">
+        <form method="POST" action="{{ url_for('edit_employee', employee_id=employee.employee_id) }}">
+          <!-- Employee ID (Read-only) -->
+          <div class="mb-3">
+            <label class="form-label text-muted small fw-semibold">Employee ID (Primary Key)</label>
+            <input type="text" class="form-control font-monospace bg-light" value="#{{ employee.employee_id }}" disabled readonly>
+          </div>
+
+          <!-- Employee Name -->
+          <div class="mb-3">
+            <label for="employee_name" class="form-label fw-semibold">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="employee_name" 
+                   name="employee_name" 
+                   value="{{ employee.employee_name }}" 
+                   maxlength="100" 
+                   required>
+            <div class="form-text">Staff member's legal name (max 100 characters).</div>
+          </div>
+
+          <!-- Role -->
+          <div class="mb-3">
+            <label for="role" class="form-label fw-semibold">
+              Role / Designation <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="Manager" {{ 'selected' if employee.role == 'Manager' else '' }}>Manager</option>
+              <option value="Cashier" {{ 'selected' if employee.role == 'Cashier' else '' }}>Cashier</option>
+              <option value="Inventory Clerk" {{ 'selected' if employee.role == 'Inventory Clerk' else '' }}>Inventory Clerk</option>
+              <option value="Sales Associate" {{ 'selected' if employee.role == 'Sales Associate' else '' }}>Sales Associate</option>
+            </select>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="mb-3">
+            <label for="phone" class="form-label fw-semibold">Contact Phone</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+              <input type="tel" 
+                     class="form-control" 
+                     id="phone" 
+                     name="phone" 
+                     value="{{ employee.phone or '' }}" 
+                     maxlength="15">
+            </div>
+            <div class="form-text">Staff contact phone number.</div>
+          </div>
+
+          <!-- Sales Processed Info -->
+          <div class="p-3 bg-light rounded border mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted">Sales billed by this employee:</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5">
+                {{ employee.sales_handled }} sales
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-x-lg me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i> Update Employee
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

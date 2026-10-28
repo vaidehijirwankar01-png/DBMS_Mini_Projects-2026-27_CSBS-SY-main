@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Add Product - Retail Store Management System{% endblock %}
+{% block page_title %}Add New Product{% endblock %}
+{% block page_subtitle %}Create a new product entry in the MySQL database{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div class="content-card-title">
+          <i class="bi bi-plus-circle text-primary"></i>
+          <span>New Product Details</span>
+        </div>
+        <a href="{{ url_for('products') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Back to Products
+        </a>
+      </div>
+
+      <div class="content-card-body p-4">
+        <form method="POST" action="{{ url_for('add_product') }}">
+          <!-- Product Name -->
+          <div class="mb-3">
+            <label for="product_name" class="form-label fw-semibold">
+              Product Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="product_name" 
+                   name="product_name" 
+                   placeholder="e.g. Basmati Rice 5kg" 
+                   maxlength="100" 
+                   value="{{ form_data.get('product_name', '') }}" 
+                   required>
+            <div class="form-text">Must be 1 to 100 characters long.</div>
+          </div>
+
+          <!-- Category Selection -->
+          <div class="mb-3">
+            <label for="category_id" class="form-label fw-semibold">
+              Category <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="category_id" name="category_id" required>
+              <option value="" disabled {{ 'selected' if not form_data.get('category_id') else '' }}>-- Select Product Category --</option>
+              {% for cat in categories %}
+                <option value="{{ cat.category_id }}" {{ 'selected' if form_data.get('category_id')|string == cat.category_id|string else '' }}>
+                  {{ cat.category_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Supplier Selection -->
+          <div class="mb-3">
+            <label for="supplier_id" class="form-label fw-semibold">
+              Supplier <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="supplier_id" name="supplier_id" required>
+              <option value="" disabled {{ 'selected' if not form_data.get('supplier_id') else '' }}>-- Select Wholesale Supplier --</option>
+              {% for supp in suppliers %}
+                <option value="{{ supp.supplier_id }}" {{ 'selected' if form_data.get('supplier_id')|string == supp.supplier_id|string else '' }}>
+                  {{ supp.supplier_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Price & Quantity -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6">
+              <label for="price" class="form-label fw-semibold">
+                Price (₹) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" 
+                       class="form-control" 
+                       id="price" 
+                       name="price" 
+                       step="0.01" 
+                       min="0.01" 
+                       placeholder="0.00" 
+                       value="{{ form_data.get('price', '') }}" 
+                       required>
+              </div>
+              <div class="form-text">Must be greater than 0.</div>
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label for="quantity" class="form-label fw-semibold">
+                Stock Quantity <span class="text-danger">*</span>
+              </label>
+              <input type="number" 
+                     class="form-control" 
+                     id="quantity" 
+                     name="quantity" 
+                     min="0" 
+                     step="1" 
+                     value="{{ form_data.get('quantity', '10') }}" 
+                     required>
+              <div class="form-text">Non-negative integer (default: 10).</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i> Save Product
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopDB - Online Shopping Management Prototype</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      🛍️ <span>ShopDB</span> Prototype
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Shop</a>
+      <a href="orders.html">My Orders</a>
+      <a href="dashboard.html">Admin Dashboard</a>
+      <a href="login.html" id="userBtn" class="user-badge">👤 <span id="userName">Test User (ID: 1)</span></a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Top Filter & Search Controls -->
+    <div class="controls-bar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Search products by name..." />
+      </div>
+      <div style="min-width: 200px;">
+        <select id="categorySelect">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <button onclick="openReviewModal()" class="btn btn-secondary">⭐ Leave Product Review</button>
+      <button onclick="openAddProductModal()" class="btn btn-secondary">➕ Add Product (Admin)</button>
+    </div>
+
+    <!-- Main Layout: Product Grid + Cart Sidebar -->
+    <div class="shop-layout">
+      <!-- Product Grid -->
+      <div>
+        <h2 style="margin-bottom: 16px; font-size: 1.3rem;">Available Products</h2>
+        <div class="products-grid" id="productsContainer">
+          <div style="color: var(--text-muted);">Loading products...</div>
+        </div>
+      </div>
+
+      <!-- Cart Sidebar -->
+      <div class="cart-card">
+        <div class="cart-header">
+          <h3 style="font-size: 1.2rem;">🛒 Shopping Cart</h3>
+          <span id="cartCountBadge" class="badge badge-info">0 items</span>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+          <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px 0;">
+            Your cart is empty. Add products to get started!
+          </p>
+        </div>
+
+        <div class="cart-total-box">
+          <span>Grand Total:</span>
+          <span id="cartTotal">₹0.00</span>
+        </div>
+
+        <!-- Checkout Controls -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">
+              Delivery Address:
+            </label>
+            <select id="addressSelect">
+              <option value="1">1: MG Road, Pune, Maharashtra (411001)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">
+              Payment Method:
+            </label>
+            <select id="paymentMethod">
+              <option value="UPI">UPI (Google Pay / PhonePe)</option>
+              <option value="Card">Credit / Debit Card</option>
+              <option value="NetBanking">Net Banking</option>
+              <option value="COD">Cash on Delivery (COD)</option>
+            </select>
+          </div>
+
+          <button onclick="checkoutOrder()" id="checkoutBtn" class="btn btn-success" style="width: 100%; padding: 12px;">
+            ⚡ Place Order (ACID Transaction)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal" id="reviewModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Submit Product Review</h3>
+        <button class="close-btn" onclick="closeModal('reviewModal')">&times;</button>
+      </div>
+      <form id="reviewForm" onsubmit="submitReview(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Product:</label>
+          <select id="reviewProductSelect" required></select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Rating (1 to 5):</label>
+          <select id="reviewRating" required>
+            <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+            <option value="4">⭐⭐⭐⭐ (4 - Very Good)</option>
+            <option value="3">⭐⭐⭐ (3 - Good)</option>
+            <option value="2">⭐⭐ (2 - Fair)</option>
+            <option value="1">⭐ (1 - Poor)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Comment:</label>
+          <textarea id="reviewComment" rows="3" placeholder="Share your experience..."></textarea>
+        </div>
+        <button type="submit" class="btn">Submit Review</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Product Modal (Admin Demo) -->
+  <div class="modal" id="addProductModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Product (Admin)</h3>
+        <button class="close-btn" onclick="closeModal('addProductModal')">&times;</button>
+      </div>
+      <form id="addProductForm" onsubmit="submitNewProduct(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Category:</label>
+          <select id="newProductCategory" required></select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Product Name:</label>
+          <input type="text" id="newProductName" required placeholder="e.g. Mechanical Keyboard" />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Price (₹):</label>
+            <input type="number" id="newProductPrice" step="0.01" min="0" required placeholder="2499" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Stock Qty:</label>
+            <input type="number" id="newProductStock" min="0" required placeholder="25" />
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Description:</label>
+          <input type="text" id="newProductDesc" placeholder="Brief product description" />
+        </div>
+        <button type="submit" class="btn">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

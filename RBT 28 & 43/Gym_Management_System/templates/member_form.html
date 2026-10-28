@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Add Member</h3>
+<form method="post" class="card card-body shadow-sm" style="max-width:600px">
+  <label class="form-label">Name</label><input class="form-control mb-2" name="name" required>
+  <label class="form-label">Street</label><input class="form-control mb-2" name="street">
+  <div class="row mb-2">
+    <div class="col"><label class="form-label">City</label><input class="form-control" name="city"></div>
+    <div class="col"><label class="form-label">State</label><input class="form-control" name="state"></div>
+  </div>
+  <label class="form-label">Date of Birth</label><input type="date" class="form-control mb-2" name="dob" required>
+  <label class="form-label">Phone numbers (comma separated)</label><input class="form-control mb-2" name="phones">
+  <label class="form-label">Trainer</label>
+  <select class="form-select mb-3" name="trainer_id">
+    <option value="">-- None --</option>
+    {% for t in trainers %}<option value="{{ t.trainer_id }}">{{ t.trainer_name }} ({{ t.specialization }})</option>{% endfor %}
+  </select>
+  <button class="btn btn-primary">Save</button>
+</form>
+{% endblock %}

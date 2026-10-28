@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Overview</h2>
+<div class="stats">
+  <span>Farmers: <b>{{ stats.farmers }}</b></span><span>Consumers: <b>{{ stats.consumers }}</b></span>
+  <span>Products: <b>{{ stats.products }}</b></span><span>Orders: <b>{{ stats.orders }}</b></span>
+  <span>Revenue: <b>Rs {{ stats.revenue }}</b></span>
+</div>
+
+<h2>Farmer summary (cursor report)</h2>
+<table><tr><th>ID</th><th>Farmer</th><th>Products listed</th><th>Revenue (Rs)</th></tr>
+{% for s in summary %}<tr><td>{{ s.farmer_id }}</td><td>{{ s.farmer_name }}</td><td>{{ s.products_listed }}</td><td>{{ s.revenue }}</td></tr>{% endfor %}</table>
+
+<h2>Farmers</h2>
+<table><tr><th>ID</th><th>Name</th><th>Address</th><th>Phones</th><th></th></tr>
+{% for f in farmers %}<tr><td>{{ f.farmer_id }}</td><td>{{ f.name }}</td><td>{{ f.address }}</td><td>{{ f.phones }}</td>
+<td><form class="inline" method="post" action="{{ url_for('admin_delete', table='farmer', rid=f.farmer_id) }}" onsubmit="return confirm('Delete farmer and their products?')"><button class="red">Delete</button></form></td></tr>{% endfor %}</table>
+
+<h2>Consumers</h2>
+<table><tr><th>ID</th><th>Name</th><th>Address</th><th>Phones</th><th></th></tr>
+{% for c in consumers %}<tr><td>{{ c.consumer_id }}</td><td>{{ c.name }}</td><td>{{ c.address }}</td><td>{{ c.phones }}</td>
+<td><form class="inline" method="post" action="{{ url_for('admin_delete', table='consumer', rid=c.consumer_id) }}" onsubmit="return confirm('Delete consumer and their orders?')"><button class="red">Delete</button></form></td></tr>{% endfor %}</table>
+
+<h2>All products</h2>
+<table><tr><th>ID</th><th>Product</th><th>Farmer</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr>
+{% for p in products %}<tr><td>{{ p.product_id }}</td><td>{{ p.name }}</td><td>{{ p.farmer_name }}</td><td>{{ p.category }}</td>
+<td>{{ p.price }} / {{ p.unit }}</td><td>{{ p.quantity }} {{ p.unit }}</td>
+<td><form class="inline" method="post" action="{{ url_for('admin_delete', table='product', rid=p.product_id) }}"><button class="red">Delete</button></form></td></tr>{% endfor %}</table>
+
+<h2>Orders</h2>
+<table><tr><th>ID</th><th>Consumer</th><th>Date</th><th>Total</th><th>Status</th><th>Change status</th></tr>
+{% for o in orders %}<tr><td>{{ o.order_id }}</td><td>{{ o.consumer_name }}</td><td>{{ o.order_date }}</td><td>{{ o.total_price }}</td><td>{{ o.status }}</td>
+<td><form class="inline" method="post" action="{{ url_for('admin_order_status', oid=o.order_id) }}">
+<select name="status">{% for s in ['Placed','Paid','Shipped','Delivered','Cancelled'] %}<option {% if s == o.status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+<button>Update</button></form></td></tr>{% endfor %}</table>
+
+<h2>Payments</h2>
+<table><tr><th>ID</th><th>Order</th><th>Amount</th><th>Method</th><th>Transaction</th></tr>
+{% for p in payments %}<tr><td>{{ p.payment_id }}</td><td>{{ p.order_id }}</td><td>{{ p.amount }}</td><td>{{ p.payment_method }}</td><td>{{ p.transaction_id }}</td></tr>{% endfor %}</table>
+
+<h2>Deliveries</h2>
+<form method="post" action="{{ url_for('admin_delivery_add') }}" class="card">
+  Paid order:
+  <select name="payment_id" required>{% for u in unshipped %}<option value="{{ u.payment_id }}">Order #{{ u.order_id }} (Payment {{ u.payment_id }})</option>{% endfor %}</select>
+  Partner <input name="delivery_partner" required>
+  Date <input type="date" name="delivery_date">
+  <button>Create Delivery</button>
+</form>
+<table><tr><th>ID</th><th>Order</th><th>Tracking</th><th>Partner / Date</th><th></th></tr>
+{% for d in deliveries %}<tr><td>{{ d.delivery_id }}</td><td>{{ d.order_id }}</td><td>{{ d.tracking_id }}</td>
+<td><form class="inline" method="post" action="{{ url_for('admin_delivery_update', did=d.delivery_id) }}">
+<input name="delivery_partner" value="{{ d.delivery_partner }}"><input type="date" name="delivery_date" value="{{ d.delivery_date or '' }}"><button>Save</button></form></td>
+<td><form class="inline" method="post" action="{{ url_for('admin_delete', table='delivery', rid=d.delivery_id) }}"><button class="red">Delete</button></form></td></tr>{% endfor %}</table>
+
+<h2>Recently deleted products (trigger log)</h2>
+<table><tr><th>Product ID</th><th>Name</th><th>Farmer ID</th><th>Deleted at</th></tr>
+{% for a in audit %}<tr><td>{{ a.product_id }}</td><td>{{ a.name }}</td><td>{{ a.farmer_id }}</td><td>{{ a.deleted_at }}</td></tr>{% endfor %}</table>
+{% endblock %}

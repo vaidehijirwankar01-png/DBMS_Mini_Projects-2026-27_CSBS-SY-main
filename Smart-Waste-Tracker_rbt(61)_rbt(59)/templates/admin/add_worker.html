@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Register Sanitation Worker - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="mb-3">
+            <a href="{{ url_for('admin.workers') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Workers
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-sm-5 bg-white">
+            <h4 class="fw-bold text-dark mb-1">Register Sanitation Worker</h4>
+            <p class="text-muted small mb-4">Creates both a user account and an operational worker profile in a single atomic transaction.</p>
+
+            <form method="POST" action="{{ url_for('admin.add_worker') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Worker Full Name <span class="text-danger">*</span></label>
+                    <input type="text" name="full_name" class="form-control" required placeholder="e.g. Ramesh Kumar">
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required placeholder="worker@smartwaste.in">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" placeholder="9876543210">
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Initial Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Defaults to password123">
+                        <small class="text-muted">Default: password123</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Joining Date</label>
+                        <input type="date" name="joining_date" class="form-control" value="{{ now }}">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+                    <i class="bi bi-check2-circle me-1"></i> Register Worker
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

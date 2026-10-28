@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Stored Procedures — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">MySQL Stored Procedures Lab</h3>
+        <p class="text-muted small mb-0">Demonstrating <code>CREATE PROCEDURE</code>, <code>CALL</code>, <code>IN</code>, <code>OUT</code>, and <code>INOUT</code> parameters</p>
+    </div>
+    <span class="badge bg-primary bg-opacity-10 text-primary p-2">Executed via <code>mysql-connector cursor.callproc()</code></span>
+</div>
+
+<!-- If a procedure was just executed, show its output card -->
+{% if result_data %}
+<div class="card border-primary mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-cpu-fill me-2"></i> Procedure Execution Output: <code>{{ proc_name }}</code></span>
+        <span class="badge bg-light text-primary">Status: Completed</span>
+    </div>
+    <div class="card-body p-4">
+        {% if result_data.type == 'fee_summary' %}
+            <div class="row text-center g-3">
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Input [IN student_id]</small>
+                        <h4 class="fw-bold mt-1">#{{ result_data.student_id }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Output [OUT p_total_fees]</small>
+                        <h4 class="fw-bold mt-1">₹{{ "{:,.2f}".format(result_data.total_fees) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                        <small class="text-success">Output [OUT p_paid_fees]</small>
+                        <h4 class="fw-bold text-success mt-1">₹{{ "{:,.2f}".format(result_data.paid_fees) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-danger bg-opacity-10 rounded">
+                        <small class="text-danger">Output [OUT p_pending_fees]</small>
+                        <h4 class="fw-bold text-danger mt-1">₹{{ "{:,.2f}".format(result_data.pending_fees) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted"><strong>Equivalent MySQL Workbench Command:</strong></small>
+                <pre class="sql-box mt-1 mb-0"><code>CALL GetStudentFeeSummary({{ result_data.student_id }}, @total, @paid, @pending);
+SELECT @total AS total_fee, @paid AS paid_fee, @pending AS pending_fee;</code></pre>
+            </div>
+
+        {% elif result_data.type == 'dept_count' %}
+            <div class="row text-center g-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Input [IN p_department_id]</small>
+                        <h4 class="fw-bold mt-1">#{{ result_data.department_id }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                        <small class="text-primary">Output [OUT p_student_count]</small>
+                        <h4 class="fw-bold text-primary mt-1">{{ result_data.student_count }} Students</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted"><strong>Equivalent MySQL Workbench Command:</strong></small>
+                <pre class="sql-box mt-1 mb-0"><code>CALL GetDepartmentStudentCount({{ result_data.department_id }}, @count);
+SELECT @count AS student_count;</code></pre>
+            </div>
+
+        {% elif result_data.type == 'attendance_pct' %}
+            <div class="row text-center g-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Input [IN p_student_id]</small>
+                        <h4 class="fw-bold mt-1">#{{ result_data.student_id }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                        <small class="text-muted">Input [IN p_course_id]</small>
+                        <h4 class="fw-bold mt-1">#{{ result_data.course_id }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-info bg-opacity-10 rounded">
+                        <small class="text-info">Result [INOUT p_attendance_pct]</small>
+                        <h4 class="fw-bold text-info mt-1">{{ result_data.attendance_percentage }}%</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted"><strong>Equivalent MySQL Workbench Command:</strong></small>
+                <pre class="sql-box mt-1 mb-0"><code>SET @pct = 0.00;
+CALL CalculateAttendancePercentage({{ result_data.student_id }}, {{ result_data.course_id }}, @pct);
+SELECT @pct AS attendance_rate;</code></pre>
+            </div>
+
+        {% elif result_data.type == 'student_details' and result_data.details %}
+            {% set det = result_data.details %}
+            <div class="p-3 bg-light rounded">
+                <h5 class="fw-bold text-primary mb-1">{{ det.full_name }} ({{ det.roll_number }})</h5>
+                <p class="mb-2 text-muted small">Department: {{ det.department_name }} &bull; HOD: {{ det.hod_name }} ({{ det.office_location }})</p>
+                <div class="row small">
+                    <div class="col-md-4"><strong>Email:</strong> {{ det.email }}</div>
+                    <div class="col-md-4"><strong>Phone:</strong> {{ det.phone }}</div>
+                    <div class="col-md-4"><strong>Semester:</strong> Sem {{ det.semester }} (Batch {{ det.admission_year }})</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted"><strong>Equivalent MySQL Workbench Command:</strong></small>
+                <pre class="sql-box mt-1 mb-0"><code>CALL GetStudentDetails({{ det.student_id }});</code></pre>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Interactive Procedure Execution Cards -->
+<div class="row g-4 mb-4">
+    <!-- Procedure 1: GetStudentFeeSummary (OUT params) -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-primary">1. GetStudentFeeSummary</h6>
+                    <span class="badge bg-success">Multiple OUT</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Takes a student ID as an <code>IN</code> parameter and outputs total fees, paid fees, and pending balances using three separate <code>OUT</code> parameters.
+                </p>
+                <form method="POST" action="{{ url_for('procedures') }}">
+                    <input type="hidden" name="action" value="fee_summary">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Select Student (IN parameter):</label>
+                        <select class="form-select form-select-sm" name="student_id" required>
+                            {% for s in students %}
+                                <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-play-circle me-1"></i> Call Stored Procedure
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedure 2: GetDepartmentStudentCount (OUT param) -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-primary">2. GetDepartmentStudentCount</h6>
+                    <span class="badge bg-primary">IN + OUT</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Takes a department ID and outputs the total count of enrolled students in that department via an <code>OUT</code> parameter.
+                </p>
+                <form method="POST" action="{{ url_for('procedures') }}">
+                    <input type="hidden" name="action" value="dept_count">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Select Department (IN parameter):</label>
+                        <select class="form-select form-select-sm" name="department_id" required>
+                            {% for d in departments %}
+                                <option value="{{ d.department_id }}">{{ d.department_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-play-circle me-1"></i> Call Stored Procedure
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedure 3: CalculateAttendancePercentage (INOUT param) -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-primary">3. CalculateAttendancePercentage</h6>
+                    <span class="badge bg-warning text-dark">INOUT Param</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Demonstrates an <code>INOUT</code> parameter: receives an initial variable reference, calculates total vs attended sessions, and returns the percentage in the same variable.
+                </p>
+                <form method="POST" action="{{ url_for('procedures') }}">
+                    <input type="hidden" name="action" value="attendance_pct">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Student (IN):</label>
+                            <select class="form-select form-select-sm" name="student_id" required>
+                                {% for s in students %}
+                                    <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Course (IN):</label>
+                            <select class="form-select form-select-sm" name="course_id" required>
+                                {% for c in courses %}
+                                    <option value="{{ c.course_id }}">{{ c.course_code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-play-circle me-1"></i> Calculate with INOUT
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedure 4: GetStudentDetails (SELECT result) -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-primary">4. GetStudentDetails</h6>
+                    <span class="badge bg-secondary">Result Set</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Executes an internal multi-table <code>SELECT ... INNER JOIN</code> returning a complete student profile result set.
+                </p>
+                <form method="POST" action="{{ url_for('procedures') }}">
+                    <input type="hidden" name="action" value="student_details">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Select Student (IN parameter):</label>
+                        <select class="form-select form-select-sm" name="student_id" required>
+                            {% for s in students %}
+                                <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-play-circle me-1"></i> Fetch Details
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

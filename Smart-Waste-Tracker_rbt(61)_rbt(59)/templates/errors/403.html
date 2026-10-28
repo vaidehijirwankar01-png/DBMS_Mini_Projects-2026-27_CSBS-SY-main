@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Access Forbidden (403) - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center py-5">
+    <div class="col-md-6">
+        <div class="display-1 fw-bold text-danger mb-3">403</div>
+        <h3 class="fw-bold text-dark mb-2">Access Forbidden</h3>
+        <p class="text-muted mb-4">You do not have the required role-based permissions to access this administrative or operational area.</p>
+        <a href="/" class="btn btn-outline-danger px-4 py-2 fw-semibold">
+            <i class="bi bi-shield-lock me-1"></i> Return to Safe Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+

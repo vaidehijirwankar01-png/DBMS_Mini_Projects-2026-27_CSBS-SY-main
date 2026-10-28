@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Survival System | DBMS Project | JSPM's RSCOE Pune</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="assets/jspm-logo.png">
+</head>
+<body>
+
+  <!-- Institutional College Header -->
+  <header class="inst-header">
+    <div class="inst-header-content">
+      <div class="inst-brand-wrap">
+        <div class="inst-logos">
+          <img src="assets/jspm-logo.png" alt="JSPM Logo" class="inst-logo" title="JSPM Educational Trust">
+          <img src="assets/rscoe-logo.jpeg" alt="RSCOE Logo" class="inst-logo" title="Rajarshi Shahu College of Engineering">
+        </div>
+        <div class="inst-info">
+          <h1>JSPM’s Rajarshi Shahu College of Engineering, Tathawade, Pune</h1>
+          <p>(An Autonomous Institute affiliated to Savitribai Phule Pune University) • Dept. of Computer Science & Business Systems</p>
+        </div>
+      </div>
+
+      <div class="inst-controls">
+        <div class="student-picker">
+          <label for="studentSelect">Active Student:</label>
+          <select id="studentSelect">
+            <option value="1">Vaidehi Pravin Jirwankar (RBT25CB054)</option>
+            <option value="2">Manaswi Kadu (RBT25CB055)</option>
+          </select>
+        </div>
+
+        <button class="header-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+          <span id="themeIcon">🌙</span> <span id="themeLabel">Dark</span>
+        </button>
+
+        <button class="header-btn" id="printAuditBtn" title="Print Academic Audit Report">
+          🖨️ Print Audit Card
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Project Sub-Bar -->
+  <div class="project-subbar">
+    <div class="project-subbar-content">
+      <div class="project-title-meta">
+        <span class="badge-tag">DBMS PROJECT</span>
+        <div>
+          <span class="project-name">Student Survival System</span>
+          <span class="project-subtitle"> — A DBMS dashboard for attendance, assignments, marks, deadlines & exam readiness</span>
+        </div>
+      </div>
+      <div class="project-faculty-meta">
+        <span><strong>Academic Year:</strong> 2026-27</span>
+        <span><strong>Course:</strong> Database Management System</span>
+        <span><strong>Course Coordinator:</strong> Prof. Rutuja S. Bachhav</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs Bar -->
+  <nav class="nav-tabs-bar">
+    <div class="nav-tabs-content">
+      <button class="tab-btn active" data-tab="pane-dashboard">
+        📊 Dashboard & Risk Center
+      </button>
+      <button class="tab-btn" data-tab="pane-attendance">
+        📅 Attendance Tracker <span class="tab-badge danger" id="navAttRiskBadge" style="display:none;">Low</span>
+      </button>
+      <button class="tab-btn" data-tab="pane-assignments">
+        📝 Assignments & Deadlines <span class="tab-badge" id="navAssignBadge" style="background:#f59e0b;color:#fff;">3</span>
+      </button>
+      <button class="tab-btn" data-tab="pane-marks">
+        🎯 Marks & Exam Readiness
+      </button>
+      <button class="tab-btn" data-tab="pane-schema">
+        🗄️ Database Design & ER Diagram
+      </button>
+      <button class="tab-btn" data-tab="pane-sql">
+        💻 Live SQL Query Console
+      </button>
+      <button class="tab-btn" data-tab="pane-slides">
+        📽️ Presentation Mode (11 Slides)
+      </button>
+      <button class="tab-btn" data-tab="pane-report">
+        📄 Academic Audit Report
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Application Body -->
+  <main class="app-container">
+
+    <!-- ==========================================
+         TAB 1: DASHBOARD & AT-RISK CENTER
+         ========================================== -->
+    <section id="pane-dashboard" class="tab-pane active">
+
+      <!-- Student Bio Strip -->
+      <div class="student-bio-strip">
+        <div class="student-bio-left">
+          <div class="student-avatar" id="bioAvatar">👩‍🎓</div>
+          <div class="student-meta">
+            <h2 id="bioName">Vaidehi Pravin Jirwankar <span class="badge-tag" style="background:#2563eb;font-size:0.7rem;" id="bioSemester">Semester 4</span></h2>
+            <p id="bioDept">Department of Computer Science and Business Systems | JSPM's RSCOE</p>
+          </div>
+        </div>
+        <div class="student-quick-pills">
+          <div class="bio-pill">PRN: <strong id="bioPRN">RBT25CB054</strong></div>
+          <div class="bio-pill">Email: <strong id="bioEmail">vaidehi.jirwankar@rscoe.jspm.edu.in</strong></div>
+          <div class="bio-pill">Status: <strong id="bioStatus" style="color:var(--success);">Enrolled (Active)</strong></div>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards Grid -->
+      <div class="kpi-grid">
+        <!-- Attendance KPI -->
+        <div class="kpi-card attendance">
+          <div class="kpi-header">
+            <h3>Overall Attendance</h3>
+            <span class="kpi-icon">📅</span>
+          </div>
+          <div class="kpi-value-wrap">
+            <div class="kpi-value" id="kpiAttPct">--%</div>
+            <div class="kpi-sub" id="kpiAttRatio">--/-- lectures</div>
+          </div>
+          <div class="kpi-footer" id="kpiAttStatus">
+            <span class="status-indicator status-safe"></span> 75% Rule Enforced
+          </div>
+        </div>
+
+        <!-- Assignments KPI -->
+        <div class="kpi-card assignments">
+          <div class="kpi-header">
+            <h3>Pending Deadlines</h3>
+            <span class="kpi-icon">📝</span>
+          </div>
+          <div class="kpi-value-wrap">
+            <div class="kpi-value" id="kpiAssignPending">-</div>
+            <div class="kpi-sub" id="kpiAssignTotal">due this month</div>
+          </div>
+          <div class="kpi-footer" id="kpiAssignStatus">
+            <span class="status-indicator status-warning"></span> Upcoming submissions
+          </div>
+        </div>
+
+        <!-- Marks KPI -->
+        <div class="kpi-card marks">
+          <div class="kpi-header">
+            <h3>Academic Marks Avg</h3>
+            <span class="kpi-icon">🎯</span>
+          </div>
+          <div class="kpi-value-wrap">
+            <div class="kpi-value" id="kpiMarksPct">--%</div>
+            <div class="kpi-sub" id="kpiMarksRatio">in evaluations</div>
+          </div>
+          <div class="kpi-footer" id="kpiMarksStatus">
+            <span class="status-indicator status-safe"></span> 40% Pass Standard
+          </div>
+        </div>
+
+        <!-- At-Risk Subjects KPI -->
+        <div class="kpi-card risk">
+          <div class="kpi-header">
+            <h3>At-Risk Subjects</h3>
+            <span class="kpi-icon">⚠️</span>
+          </div>
+          <div class="kpi-value-wrap">
+            <div class="kpi-value" id="kpiRiskCount" style="color:var(--danger);">-</div>
+            <div class="kpi-sub">need immediate action</div>
+          </div>
+          <div class="kpi-footer">
+            <span class="status-indicator status-danger"></span> sp_get_at_risk_subjects
+          </div>
+        </div>
+
+        <!-- Exam Readiness KPI -->
+        <div class="kpi-card readiness">
+          <div class="kpi-header">
+            <h3>Exam Readiness</h3>
+            <span class="kpi-icon">🚀</span>
+          </div>
+          <div class="kpi-value-wrap">
+            <div class="kpi-value" id="kpiReadinessScore" style="color:var(--success);">--%</div>
+            <div class="kpi-sub" id="kpiReadinessLabel">Evaluation score</div>
+          </div>
+          <div class="kpi-footer">
+            <span class="status-indicator status-safe"></span> Weighted index
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time At-Risk Warning Box (Stored Procedure Rule Simulator) -->
+      <div class="at-risk-banner" id="atRiskBanner">
+        <div class="at-risk-header">
+          <div class="at-risk-title">
+            <span style="font-size:1.5rem;">🚨</span>
+            <div>
+              <h3>Early Warning Risk Center (sp_get_at_risk_subjects)</h3>
+              <p>Automated database detection for subjects failing 75% attendance or 40% marks passing thresholds</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="action-btn secondary" id="btnAdjustThresholds" style="font-size:0.78rem;">
+              ⚙️ Adjust Thresholds (75% / 40%)
+            </button>
+            <button class="action-btn" id="btnQuickAttendance" style="font-size:0.78rem;">
+              + Mark Today's Lecture
+            </button>
+          </div>
+        </div>
+
+        <div class="at-risk-cards-grid" id="atRiskCardsContainer">
+          <!-- Dynamic Risk Cards populated by JS -->
+        </div>
+      </div>
+
+      <!-- Dashboard Columns (Left: Subject Overview, Right: Upcoming Deadlines & Quick Tools) -->
+      <div class="dashboard-columns">
+        
+        <!-- Left: Academic Subjects Health Table -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-title">
+              <span style="font-size:1.3rem;">📚</span>
+              <div>
+                <h3>Subject-Wise Performance & Attendance Overview</h3>
+                <p>Synced with view: <code>vw_attendance_summary</code> & <code>vw_marks_summary</code></p>
+              </div>
+            </div>
+            <button class="action-btn secondary" onclick="document.querySelector('[data-tab=\'pane-attendance\']').click()">
+              View Attendance Log →
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="dashboardSubjectsTable">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Faculty</th>
+                  <th>Attendance %</th>
+                  <th>Marks %</th>
+                  <th>Status</th>
+                  <th>Quick Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardSubjectsBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right: Urgent Deadlines & System Info -->
+        <div>
+          <!-- Deadlines Widget -->
+          <div class="section-card">
+            <div class="section-header">
+              <div class="section-header-title">
+                <span style="font-size:1.2rem;">⏰</span>
+                <div>
+                  <h3>Upcoming Deadlines</h3>
+                  <p>CALL <code>sp_upcoming_deadlines(student_id, 7)</code></p>
+                </div>
+              </div>
+              <button class="action-btn secondary" style="font-size:0.75rem;" id="btnAddAssignDash">
+                + New
+              </button>
+            </div>
+
+            <div class="deadline-items-list" id="dashboardDeadlinesList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Academic Rule Info Card -->
+          <div class="section-card" style="background:var(--bg-subtle);">
+            <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;">
+              <span>⚖️</span> SPPU & College Eligibility Criteria
+            </h4>
+            <ul style="font-size:0.8rem;color:var(--text-sub);padding-left:1.2rem;line-height:1.6;">
+              <li><strong>75% Minimum Attendance:</strong> Mandatory for appearing in In-Sem and End-Sem exams.</li>
+              <li><strong>40% Minimum Passing Marks:</strong> Aggregate of In-Sem and End-Sem evaluations.</li>
+              <li><strong>Tier 2 Architecture:</strong> All risk calculations happen directly inside MySQL views.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==========================================
+         TAB 2: ATTENDANCE TRACKER
+         ========================================== -->
+    <section id="pane-attendance" class="tab-pane">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-title">
+            <span style="font-size:1.4rem;">📅</span>
+            <div>
+              <h3>Subject Attendance Tracker & Bunk / Recovery Calculator</h3>
+              <p>Enforcing SPPU 75% rule • Calculated via <code>vw_attendance_summary</code></p>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="action-btn" id="btnLogAttendanceModal">
+              + Mark Lecture Attendance
+            </button>
+          </div>
+        </div>
+
+        <!-- Attendance Subject Grid -->
+        <div class="schema-cards-grid" id="attSubjectCardsGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Detailed Attendance Log Table -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-title">
+            <span style="font-size:1.2rem;">📋</span>
+            <div>
+              <h3>Lecture-by-Lecture Attendance Log</h3>
+              <p>Table: <code>Attendance</code> (student_id, subject_id, lecture_date, status)</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <select id="filterAttSubject" class="form-control" style="width:200px;font-size:0.8rem;">
+              <option value="all">All Subjects</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Log ID</th>
+                <th>Subject</th>
+                <th>Lecture Date</th>
+                <th>Status</th>
+                <th>Integrity Constraint</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceLogsBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: ASSIGNMENTS & DEADLINES
+         ========================================== -->
+    <section id="pane-assignments" class="tab-pane">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-title">
+            <span style="font-size:1.4rem;">📝</span>
+            <div>
+              <h3>Assignments & Deadlines Management Hub</h3>
+              <p>Table: <code>Assignments</code> • Filtered via <code>sp_upcoming_deadlines</code></p>
+            </div>
+          </div>
+          <button class="action-btn" id="btnAddAssignmentModal">
+            + Add New Assignment
+          </button>
+        </div>
+
+        <!-- Assignment Filter Pills -->
+        <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+          <button class="header-btn active" id="filterAssignAll">All Assignments</button>
+          <button class="header-btn" id="filterAssignPending">Pending</button>
+          <button class="header-btn" id="filterAssignSubmitted">Submitted</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Subject</th>
+                <th>Assignment Title</th>
+                <th>Due Date</th>
+                <th>Countdown</th>
+                <th>Status</th>
+                <th>Max Score</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 4: MARKS & EXAM READINESS
+         ========================================== -->
+    <section id="pane-marks" class="tab-pane">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-title">
+            <span style="font-size:1.4rem;">🎯</span>
+            <div>
+              <h3>Academic Marks & Exam Readiness Center</h3>
+              <p>Tables: <code>Exams</code> & <code>Marks</code> • Views: <code>vw_marks_summary</code></p>
+            </div>
+          </div>
+          <button class="action-btn" id="btnUpdateMarksModal">
+            + Enter / Update Exam Marks
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Credits</th>
+                <th>In-Sem Exam (30)</th>
+                <th>Unit Test (20)</th>
+                <th>Total Marks</th>
+                <th>Marks %</th>
+                <th>Pass / Fail (40%)</th>
+                <th>Exam Readiness</th>
+              </tr>
+            </thead>
+            <tbody id="marksTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 5: DATABASE DESIGN & ER DIAGRAM
+         ========================================== -->
+    <section id="pane-schema" class="tab-pane">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-header-title">
+            <span style="font-size:1.4rem;">🗄️</span>
+            <div>
+              <h3>Database Design, Architecture & Relational Schema</h3>
+              <p>Slide 7 Architecture & Slide 8 ER Diagram from Project Presentation</p>
+            </div>
+          </div>
+          <div class="diagram-view-controls">
+            <button class="header-btn active" id="btnViewERD">ER Diagram</button>
+            <button class="header-btn" id="btnViewArch">System Architecture</button>
+            <button class="header-btn" id="btnViewSchemaCards">Interactive Table Explorer</button>
+          </div>
+        </div>
+
+        <!-- High-Res Diagram Display Box -->
+        <div class="diagram-img-box" id="diagramImgBox">
+          <img src="assets/er-diagram.png" alt="ER Diagram" id="activeDiagramImg">
+        </div>
+
+        <!-- Interactive 6-Table Schema Explorer (Cards) -->
+        <div class="schema-cards-grid" id="schemaTablesContainer" style="display:none;">
+          
+          <!-- Table: Students -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>👤 Students</span>
+              <span class="badge-tag" style="background:#3b82f6;">Master Entity</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">student_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">prn (VARCHAR)</span>
+              <span class="schema-badge badge-unq">UNIQUE</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">name (VARCHAR)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">email (VARCHAR)</span>
+              <span class="schema-badge badge-unq">UNIQUE</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">branch (VARCHAR)</span>
+              <span>CSBS</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">semester (INT)</span>
+              <span class="schema-badge badge-chk">CHECK (1..8)</span>
+            </div>
+          </div>
+
+          <!-- Table: Subjects -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>📖 Subjects</span>
+              <span class="badge-tag" style="background:#3b82f6;">Master Entity</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_code (VARCHAR)</span>
+              <span class="schema-badge badge-unq">UNIQUE</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_name (VARCHAR)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">credits (INT)</span>
+              <span class="schema-badge badge-chk">CHECK (credits > 0)</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">semester (INT)</span>
+              <span class="schema-badge badge-chk">CHECK (1..8)</span>
+            </div>
+          </div>
+
+          <!-- Table: Attendance -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>📅 Attendance</span>
+              <span class="badge-tag" style="background:#10b981;">1-to-N Link</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">attendance_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">student_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Students</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Subjects</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">lecture_date (DATE)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">status (VARCHAR)</span>
+              <span>'Present' / 'Absent'</span>
+            </div>
+            <div class="schema-column-row" style="background:var(--bg-subtle);">
+              <span style="font-size:0.7rem;color:var(--text-muted);">UNIQUE (student, subject, date)</span>
+              <span class="schema-badge badge-unq">CASCADE</span>
+            </div>
+          </div>
+
+          <!-- Table: Assignments -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>📝 Assignments</span>
+              <span class="badge-tag" style="background:#f59e0b;">Task Tracker</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">assignment_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">student_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Students</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Subjects</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">title (VARCHAR)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">due_date (DATE)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">status (VARCHAR)</span>
+              <span>DEFAULT 'Pending'</span>
+            </div>
+          </div>
+
+          <!-- Table: Exams -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>📋 Exams</span>
+              <span class="badge-tag" style="background:#8b5cf6;">Evaluation</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">exam_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">subject_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Subjects</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">exam_type (VARCHAR)</span>
+              <span>In-Sem, End-Sem, UT</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">exam_date (DATE)</span>
+              <span>NOT NULL</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">max_marks (DECIMAL)</span>
+              <span class="schema-badge badge-chk">CHECK (max > 0)</span>
+            </div>
+          </div>
+
+          <!-- Table: Marks -->
+          <div class="schema-table-card">
+            <div class="schema-table-header">
+              <span>🏆 Marks</span>
+              <span class="badge-tag" style="background:#ec4899;">Score Record</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">mark_id (INT)</span>
+              <span class="schema-badge badge-pk">PRIMARY KEY</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">student_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Students</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">exam_id (INT)</span>
+              <span class="schema-badge badge-fk">FK -> Exams</span>
+            </div>
+            <div class="schema-column-row">
+              <span class="schema-col-name">marks_obtained (DECIMAL)</span>
+              <span class="schema-badge badge-chk">CHECK (marks >= 0)</span>
+            </div>
+            <div class="schema-column-row" style="background:var(--bg-subtle);">
+              <span style="font-size:0.7rem;color:var(--text-muted);">UNIQUE (student_id, exam_id)</span>
+              <span class="schema-badge badge-unq">CASCADE</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 6: LIVE SQL QUERY CONSOLE
+         ========================================== -->
+    <section id="pane-sql" class="tab-pane">
+      <div class="sql-console-wrap">
+        
+        <!-- Sidebar Presets -->
+        <div class="sql-sidebar">
+          <h4>Preloaded SQL Queries</h4>
+          <button class="sql-preset-btn" data-sql="CALL sp_get_at_risk_subjects(1, 75, 40);">
+            ⚡ CALL sp_get_at_risk_subjects(1, 75, 40)
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM vw_attendance_summary WHERE student_id = 1;">
+            📊 SELECT * FROM vw_attendance_summary
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM vw_marks_summary WHERE student_id = 1;">
+            🎯 SELECT * FROM vw_marks_summary
+          </button>
+          <button class="sql-preset-btn" data-sql="CALL sp_upcoming_deadlines(1, 7);">
+            ⏰ CALL sp_upcoming_deadlines(1, 7)
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Students;">
+            👤 SELECT * FROM Students
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Subjects;">
+            📖 SELECT * FROM Subjects
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Assignments;">
+            📝 SELECT * FROM Assignments
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Exams;">
+            📋 SELECT * FROM Exams
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Marks;">
+            🏆 SELECT * FROM Marks
+          </button>
+          <button class="sql-preset-btn" data-sql="SELECT * FROM Attendance;">
+            📅 SELECT * FROM Attendance
+          </button>
+        </div>
+
+        <!-- Editor & Results Box -->
+        <div>
+          <div class="sql-editor-container">
+            <div class="sql-editor-header">
+              <span>MySQL 8.0 Terminal • Database: `student_survival_db`</span>
+              <span id="sqlExecutionStatus">Ready</span>
+            </div>
+            <textarea id="sqlQueryInput" class="sql-textarea" spellcheck="false">CALL sp_get_at_risk_subjects(1, 75, 40);</textarea>
+            <div style="background:#1e293b;padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.75rem;color:#94a3b8;">Execute with button or press Ctrl+Enter</span>
+              <button class="action-btn" id="btnRunSQL">
+                ▶ Execute Query
+              </button>
+            </div>
+          </div>
+
+          <!-- Query Output Table -->
+          <div class="sql-result-wrap">
+            <div class="sql-meta-bar">
+              <span id="sqlResultCount">0 rows in set</span>
+              <span id="sqlResultTime">0.0000 sec</span>
+            </div>
+            <div class="table-responsive" id="sqlResultTableContainer">
+              <p style="color:var(--text-muted);font-size:0.85rem;padding:1rem;">Click "Execute Query" to run the SQL statement against the active database.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 7: PRESENTATION MODE (11 SLIDES)
+         ========================================== -->
+    <section id="pane-slides" class="tab-pane">
+      <div class="slide-player-wrap">
+        
+        <div class="slide-controls-top">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="action-btn secondary" id="btnPrevSlide">← Previous</button>
+            <span style="font-weight:700;font-size:0.9rem;" id="slideCounterText">Slide 1 of 11</span>
+            <button class="action-btn" id="btnNextSlide">Next →</button>
+          </div>
+
+          <!-- Slide Navigator Pills 1 to 11 -->
+          <div class="slide-nav-pills" id="slidePillsContainer">
+            <!-- 11 buttons dynamically created -->
+          </div>
+        </div>
+
+        <!-- Slide Display Canvas -->
+        <div class="slide-display-canvas" id="slideCanvas">
+          <!-- Slide HTML dynamically injected -->
+        </div>
+
+        <div class="slide-footer-bar">
+          <span style="font-size:0.8rem;color:var(--text-muted);">
+            Use ← / → Arrow keys on your keyboard to navigate slides
+          </span>
+          <button class="header-btn" id="btnSlideFullscreen">
+            ⛶ Fullscreen Presentation
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 8: ACADEMIC AUDIT REPORT (PRINTABLE)
+         ========================================== -->
+    <section id="pane-report" class="tab-pane">
+      <div class="section-card" id="printableReportCard" style="background:#ffffff;color:#000000;padding:2.5rem;">
+        
+        <!-- Report Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #8B0000;padding-bottom:1rem;margin-bottom:1.5rem;">
+          <img src="assets/jspm-logo.png" style="height:60px;" alt="JSPM">
+          <div style="text-align:center;">
+            <h2 style="font-size:1.15rem;color:#8B0000;font-weight:800;">JSPM’s Rajarshi Shahu College of Engineering, Pune</h2>
+            <p style="font-size:0.8rem;color:#475569;">(An Autonomous Institute Affiliated to Savitribai Phule Pune University)</p>
+            <h3 style="font-size:0.95rem;font-weight:700;margin-top:0.3rem;">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS</h3>
+            <p style="font-size:0.82rem;font-weight:600;color:#1e293b;">STUDENT SURVIVAL & ACADEMIC ELIGIBILITY AUDIT DOSSIER</p>
+          </div>
+          <img src="assets/rscoe-logo.jpeg" style="height:60px;" alt="RSCOE">
+        </div>
+
+        <!-- Student Meta Grid -->
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:1rem;background:#f8fafc;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:1.5rem;font-size:0.85rem;">
+          <div><strong>Student Name:</strong> <span id="repName">Vaidehi Pravin Jirwankar</span></div>
+          <div><strong>PRN:</strong> <span id="repPRN">RBT25CB054</span></div>
+          <div><strong>Academic Year:</strong> 2026-27</div>
+          <div><strong>Branch:</strong> CSBS</div>
+          <div><strong>Semester:</strong> 4</div>
+          <div><strong>Audit Date:</strong> 21-Oct-2026</div>
+        </div>
+
+        <!-- Audit Summary Badges -->
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:1rem;margin-bottom:1.5rem;text-align:center;">
+          <div style="border:1px solid #e2e8f0;padding:0.75rem;border-radius:8px;">
+            <div style="font-size:0.75rem;color:#64748b;">Overall Attendance</div>
+            <div style="font-size:1.4rem;font-weight:800;" id="repAttPct">--%</div>
+            <div style="font-size:0.7rem;" id="repAttStatus">75% Criteria</div>
+          </div>
+          <div style="border:1px solid #e2e8f0;padding:0.75rem;border-radius:8px;">
+            <div style="font-size:0.75rem;color:#64748b;">Marks Average</div>
+            <div style="font-size:1.4rem;font-weight:800;" id="repMarksPct">--%</div>
+            <div style="font-size:0.7rem;">40% Pass Standard</div>
+          </div>
+          <div style="border:1px solid #e2e8f0;padding:0.75rem;border-radius:8px;">
+            <div style="font-size:0.75rem;color:#64748b;">Assignments Done</div>
+            <div style="font-size:1.4rem;font-weight:800;" id="repAssignPct">--%</div>
+            <div style="font-size:0.7rem;">Submitted</div>
+          </div>
+          <div style="border:1px solid #e2e8f0;padding:0.75rem;border-radius:8px;">
+            <div style="font-size:0.75rem;color:#64748b;">Exam Readiness</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#10b981;" id="repReadiness">--%</div>
+            <div style="font-size:0.7rem;">Composite Index</div>
+          </div>
+        </div>
+
+        <!-- Subject Audit Table -->
+        <h4 style="font-size:0.95rem;margin-bottom:0.6rem;">Subject-Wise Performance & In-Sem Eligibility</h4>
+        <table class="data-table" style="margin-bottom:2rem;">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Subject Name</th>
+              <th>Attended / Total</th>
+              <th>Att %</th>
+              <th>Marks (Obt / Max)</th>
+              <th>Marks %</th>
+              <th>Risk Evaluation</th>
+              <th>Eligibility</th>
+            </tr>
+          </thead>
+          <tbody id="reportSubjectsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+
+        <!-- Sign-Off Section -->
+        <div style="display:flex;justify-content:space-between;margin-top:3rem;padding-top:1.5rem;border-top:1px dashed #cbd5e1;font-size:0.85rem;">
+          <div style="text-align:center;">
+            <div style="width:180px;border-bottom:1px solid #000;margin-bottom:0.4rem;"></div>
+            <span>Student Signature</span>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:180px;border-bottom:1px solid #000;margin-bottom:0.4rem;"></div>
+            <span>Prof. Rutuja S. Bachhav<br><small>Course Coordinator (DBMS)</small></span>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:180px;border-bottom:1px solid #000;margin-bottom:0.4rem;"></div>
+            <span>Head of Department<br><small>Dept of CSBS, RSCOE</small></span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       MODAL 1: MARK LECTURE ATTENDANCE (sp_mark_attendance)
+       ========================================== -->
+  <div class="modal-overlay" id="modalAttendance">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Mark Lecture Attendance (sp_mark_attendance)</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+      </div>
+      <form id="formMarkAttendance">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="attSubjectSelect">Subject</label>
+            <select id="attSubjectSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="attLectureDate">Lecture Date</label>
+            <input type="date" id="attLectureDate" class="form-control" value="2026-10-21" required>
+          </div>
+          <div class="form-group">
+            <label>Attendance Status</label>
+            <div style="display:flex;gap:1.5rem;margin-top:0.5rem;">
+              <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                <input type="radio" name="attStatusRadio" value="Present" checked>
+                <span style="color:var(--success);font-weight:700;">✅ Present</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                <input type="radio" name="attStatusRadio" value="Absent">
+                <span style="color:var(--danger);font-weight:700;">❌ Absent</span>
+              </label>
+            </div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.8rem;">
+            * Enforces <code>UNIQUE(student_id, subject_id, lecture_date)</code>. If record exists for this date, status is updated.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="action-btn secondary" onclick="closeAllModals()">Cancel</button>
+          <button type="submit" class="action-btn">Save Attendance</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: ADD NEW ASSIGNMENT
+       ========================================== -->
+  <div class="modal-overlay" id="modalAssignment">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Course Assignment</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+      </div>
+      <form id="formAddAssignment">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="assignSubjectSelect">Subject</label>
+            <select id="assignSubjectSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="assignTitleInput">Assignment Title / Topic</label>
+            <input type="text" id="assignTitleInput" class="form-control" placeholder="e.g. Normalization & B-Tree indexing assignment" required>
+          </div>
+          <div class="form-group">
+            <label for="assignDueDateInput">Submission Due Date</label>
+            <input type="date" id="assignDueDateInput" class="form-control" value="2026-10-30" required>
+          </div>
+          <div class="form-group">
+            <label for="assignMaxScoreInput">Maximum Marks</label>
+            <input type="number" id="assignMaxScoreInput" class="form-control" value="25" min="5" max="100" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="action-btn secondary" onclick="closeAllModals()">Cancel</button>
+          <button type="submit" class="action-btn">Add Assignment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 3: UPDATE EXAM MARKS
+       ========================================== -->
+  <div class="modal-overlay" id="modalMarks">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Record / Update Exam Marks</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+      </div>
+      <form id="formUpdateMarks">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="marksExamSelect">Exam Paper</label>
+            <select id="marksExamSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="marksObtainedInput">Marks Obtained</label>
+            <input type="number" step="0.5" id="marksObtainedInput" class="form-control" placeholder="e.g. 24.5" required>
+            <small style="color:var(--text-muted);font-size:0.75rem;" id="marksMaxLabel">Constraint: marks >= 0 and <= max_marks</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="action-btn secondary" onclick="closeAllModals()">Cancel</button>
+          <button type="submit" class="action-btn">Save Marks</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 4: ADJUST AT-RISK THRESHOLDS
+       ========================================== -->
+  <div class="modal-overlay" id="modalThresholds">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Adjust Stored Procedure Thresholds</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.25rem;">
+          Test how different college criteria affect the risk classification in <code>sp_get_at_risk_subjects</code>.
+        </p>
+        <div class="form-group">
+          <label for="threshAttSlider">Minimum Attendance Threshold: <strong id="valThreshAtt">75%</strong></label>
+          <input type="range" id="threshAttSlider" min="50" max="90" value="75" step="1" style="width:100%;">
+        </div>
+        <div class="form-group">
+          <label for="threshMarksSlider">Minimum Marks Passing Threshold: <strong id="valThreshMarks">40%</strong></label>
+          <input type="range" id="threshMarksSlider" min="30" max="60" value="40" step="1" style="width:100%;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="action-btn secondary" id="btnResetThresholds">Reset Defaults (75% / 40%)</button>
+        <button type="button" class="action-btn" onclick="closeAllModals()">Apply & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

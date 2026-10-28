@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Product Management - Retail Store Management System{% endblock %}
+{% block page_title %}Product Management{% endblock %}
+{% block page_subtitle %}Inventory catalog with relational category &amp; supplier data{% endblock %}
+
+{% block content %}
+<!-- Search and Filter Bar Card -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <form method="GET" action="{{ url_for('products') }}" class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-12 col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-muted border-end-0">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" 
+                 name="q" 
+                 class="form-control border-start-0" 
+                 placeholder="Search product, category, or supplier..." 
+                 value="{{ search_query }}">
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="col-6 col-md-3">
+        <select name="category_id" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.category_id }}" {{ 'selected' if selected_category|string == cat.category_id|string else '' }}>
+              {{ cat.category_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Supplier Filter -->
+      <div class="col-6 col-md-3">
+        <select name="supplier_id" class="form-select">
+          <option value="">All Suppliers</option>
+          {% for supp in suppliers %}
+            <option value="{{ supp.supplier_id }}" {{ 'selected' if selected_supplier|string == supp.supplier_id|string else '' }}>
+              {{ supp.supplier_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-funnel me-1"></i> Filter
+        </button>
+        {% if search_query or selected_category or selected_supplier %}
+          <a href="{{ url_for('products') }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Reset Filters">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Active Filter Notice -->
+{% if search_query or selected_category or selected_supplier %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="small text-muted">
+    Showing results for: 
+    {% if search_query %}<strong>"{{ search_query }}"</strong>{% endif %}
+    {% if selected_category %}<span class="badge bg-light text-dark border ms-1">Category Filter Active</span>{% endif %}
+    {% if selected_supplier %}<span class="badge bg-light text-dark border ms-1">Supplier Filter Active</span>{% endif %}
+    &bull; <strong>{{ products | length }}</strong> product(s) found
+  </div>
+  <a href="{{ url_for('products') }}" class="btn btn-link btn-sm text-decoration-none p-0">Clear all filters</a>
+</div>
+{% endif %}
+
+<!-- Products List Card -->
+<div class="content-card">
+  <div class="content-card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+    <div class="content-card-title">
+      <i class="bi bi-box-seam text-primary"></i>
+      <span>Products Inventory ({{ products | length }} Total)</span>
+    </div>
+    <div class="d-flex gap-2">
+      <!-- Add Product Modal Trigger -->
+      <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        <i class="bi bi-plus-circle me-1"></i> Add New Product
+      </button>
+      <a href="{{ url_for('add_product') }}" class="btn btn-outline-secondary btn-sm" title="Open full add form">
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table custom-table align-middle">
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th>Product Name</th>
+          <th>Category Name (JOIN)</th>
+          <th>Supplier Name (JOIN)</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Total Value</th>
+          <th style="width: 140px;" class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for prod in products %}
+        <tr>
+          <!-- Product ID -->
+          <td class="font-monospace fw-bold text-muted">#{{ prod.product_id }}</td>
+
+          <!-- Product Name -->
+          <td>
+            <div class="fw-semibold text-dark">{{ prod.product_name }}</div>
+          </td>
+
+          <!-- Category Name (via SQL JOIN) -->
+          <td>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+              <i class="bi bi-tag me-1"></i>{{ prod.category_name }}
+            </span>
+          </td>
+
+          <!-- Supplier Name (via SQL JOIN) -->
+          <td>
+            <span class="text-secondary small">
+              <i class="bi bi-truck me-1"></i>{{ prod.supplier_name }}
+            </span>
+          </td>
+
+          <!-- Price -->
+          <td class="fw-bold text-dark">₹{{ "%.2f"|format(prod.price) }}</td>
+
+          <!-- Quantity with Status Badge -->
+          <td>
+            <strong>{{ prod.quantity }}</strong>
+            {% if prod.quantity <= 20 %}
+              <span class="badge badge-stock-low ms-1" style="font-size: 0.72rem;">Low Stock</span>
+            {% else %}
+              <span class="badge badge-stock-normal ms-1" style="font-size: 0.72rem;">In Stock</span>
+            {% endif %}
+          </td>
+
+          <!-- Total Valuation -->
+          <td class="text-secondary font-monospace small">
+            ₹{{ "%.2f"|format(prod.quantity * prod.price) }}
+          </td>
+
+          <!-- Actions -->
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('edit_product', product_id=prod.product_id) }}" 
+                 class="btn btn-outline-primary" 
+                 data-bs-toggle="tooltip" 
+                 title="Edit Product">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+              <button type="button" 
+                      class="btn btn-outline-danger delete-btn" 
+                      data-id="{{ prod.product_id }}" 
+                      data-name="{{ prod.product_name }}"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#deleteProductModal"
+                      title="Delete Product">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5">
+            <div class="text-muted">
+              <i class="bi bi-box2 text-secondary fs-1 d-block mb-2"></i>
+              <h6 class="fw-bold text-dark">No Products Found</h6>
+              {% if search_query or selected_category or selected_supplier %}
+                <p class="small mb-2">No items match your filter criteria.</p>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm">Clear Search Filter</a>
+              {% else %}
+                <p class="small mb-2">Your product catalogue is currently empty.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                  <i class="bi bi-plus-circle me-1"></i> Add First Product
+                </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- =========================================================
+     ADD PRODUCT MODAL
+     ========================================================= -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="addProductModalLabel">
+          <i class="bi bi-plus-circle me-1"></i> Add New Product
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('add_product') }}" id="addProductForm">
+        <div class="modal-body p-4">
+          <!-- Product Name -->
+          <div class="mb-3">
+            <label for="product_name" class="form-label fw-semibold">
+              Product Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="product_name" 
+                   name="product_name" 
+                   placeholder="e.g. Basmati Rice 5kg" 
+                   maxlength="100" 
+                   required>
+            <div class="form-text">Maximum 100 characters.</div>
+          </div>
+
+          <!-- Category Selection -->
+          <div class="mb-3">
+            <label for="category_id" class="form-label fw-semibold">
+              Category <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="category_id" name="category_id" required>
+              <option value="" disabled selected>-- Select Product Category --</option>
+              {% for cat in categories %}
+                <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Supplier Selection -->
+          <div class="mb-3">
+            <label for="supplier_id" class="form-label fw-semibold">
+              Supplier <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="supplier_id" name="supplier_id" required>
+              <option value="" disabled selected>-- Select Wholesale Supplier --</option>
+              {% for supp in suppliers %}
+                <option value="{{ supp.supplier_id }}">{{ supp.supplier_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Price & Quantity (2 columns) -->
+          <div class="row g-3">
+            <div class="col-6">
+              <label for="price" class="form-label fw-semibold">
+                Price (₹) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" 
+                       class="form-control" 
+                       id="price" 
+                       name="price" 
+                       step="0.01" 
+                       min="0.01" 
+                       placeholder="0.00" 
+                       required>
+              </div>
+            </div>
+            <div class="col-6">
+              <label for="quantity" class="form-label fw-semibold">
+                Initial Stock <span class="text-danger">*</span>
+              </label>
+              <input type="number" 
+                     class="form-control" 
+                     id="quantity" 
+                     name="quantity" 
+                     min="0" 
+                     step="1" 
+                     value="10" 
+                     required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> Save Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     DELETE PRODUCT CONFIRMATION MODAL
+     ========================================================= -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold" id="deleteProductModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Delete Product
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="mb-2">Are you sure you want to permanently delete this product?</p>
+        <div class="p-3 bg-light rounded border mb-3">
+          <div>Product ID: <strong id="deleteProductId">#</strong></div>
+          <div>Product Name: <strong id="deleteProductName" class="text-danger"></strong></div>
+        </div>
+        <div class="small text-muted">
+          <i class="bi bi-shield-exclamation text-danger me-1"></i>
+          <strong>DBMS Integrity Check:</strong> Products referenced in existing customer sales (<code>sale_item</code>) cannot be deleted.
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteForm" method="POST" action="">
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-trash3 me-1"></i> Delete Product
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Client-side script for dynamic modal wiring -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteIdSpan = document.getElementById('deleteProductId');
+    const deleteNameSpan = document.getElementById('deleteProductName');
+    const deleteForm = document.getElementById('deleteForm');
+
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const prodId = this.getAttribute('data-id');
+        const prodName = this.getAttribute('data-name');
+        
+        deleteIdSpan.textContent = '#' + prodId;
+        deleteNameSpan.textContent = prodName;
+        deleteForm.action = '/products/delete/' + prodId;
+      });
+    });
+  });
+</script>
+{% endblock %}

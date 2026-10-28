@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}My Assigned Tasks - Worker - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">My Assigned Tasks</h3>
+        <p class="text-muted small mb-0">Scheduled pickups assigned to you for collection and segregation auditing</p>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm rounded-3 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('worker.tasks') }}" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active Tasks</option>
+                <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>Completed Tasks</option>
+                <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Tasks</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Tasks Table -->
+<div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Req #</th>
+                    <th>Citizen</th>
+                    <th>Waste Category</th>
+                    <th>Area & Address</th>
+                    <th>Est. Weight</th>
+                    <th>Scheduled Date</th>
+                    <th>Request Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tasks %}
+                <tr>
+                    <td class="fw-bold">#{{ t.request_id }}</td>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ t.citizen_name }}</span>
+                        <small class="text-muted d-block">{{ t.citizen_phone or '—' }}</small>
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: {{ t.color_code or '#28a745' }};">
+                            {{ t.category_name }}
+                        </span>
+                    </td>
+                    <td class="small">
+                        <strong>{{ t.area_name }}</strong><br>
+                        {{ t.pickup_address }}
+                    </td>
+                    <td>{{ t.estimated_quantity_kg }} kg</td>
+                    <td>{{ t.preferred_date | format_date }}</td>
+                    <td>
+                        <span class="badge bg-{{ t.request_status | status_badge }}">{{ t.request_status }}</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('worker.task_detail', request_id=t.request_id) }}" class="btn btn-sm btn-success">
+                            Open Task
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                        No tasks found in this view.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

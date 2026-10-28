@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Pickup - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="mb-3">
+            <a href="{{ url_for('citizen.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-sm-5 bg-white">
+            <div class="text-center mb-4">
+                <div class="display-6 text-success mb-2">
+                    <i class="bi bi-calendar-plus"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Schedule Waste Pickup</h3>
+                <p class="text-muted small">Provide details for sanitation worker collection routing</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('citizen.new_request') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="mb-3">
+                    <label for="category_id" class="form-label fw-semibold">Waste Category <span class="text-danger">*</span></label>
+                    <select name="category_id" id="category_id" class="form-select" required>
+                        <option value="">Select waste type...</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.category_id }}">{{ cat.category_name }} ({{ cat.description[:50] }}...)</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Ensure your waste matches the chosen category's segregation guidelines.</small>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="estimated_quantity_kg" class="form-label fw-semibold">Estimated Weight (kg) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" min="0.1" name="estimated_quantity_kg" id="estimated_quantity_kg" class="form-control" required placeholder="e.g. 5.0">
+                            <span class="input-group-text">kg</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="area_id" class="form-label fw-semibold">Service Area <span class="text-danger">*</span></label>
+                        <select name="area_id" id="area_id" class="form-select" required>
+                            <option value="">Choose service area...</option>
+                            {% for a in areas %}
+                                <option value="{{ a.area_id }}" {% if default_area_id == a.area_id %}selected{% endif %}>
+                                    {{ a.area_name }} ({{ a.locality or 'General' }}, {{ a.postal_code }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="pickup_address" class="form-label fw-semibold">Pickup Address <span class="text-danger">*</span></label>
+                    <textarea name="pickup_address" id="pickup_address" rows="2" class="form-control" required placeholder="House/Flat number, building name, street landmark..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="preferred_date" class="form-label fw-semibold">Preferred Pickup Date <span class="text-danger">*</span></label>
+                    <input type="date" name="preferred_date" id="preferred_date" class="form-control" min="{{ min_date }}" value="{{ min_date }}" required>
+                    <small class="text-muted">Pickups are scheduled between 7:00 AM and 5:00 PM on the requested date.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="notes" class="form-label fw-semibold">Special Instructions (Optional)</label>
+                    <textarea name="notes" id="notes" rows="2" class="form-control" placeholder="Gate codes, ring bell, waste kept in blue bin outside, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold shadow-sm">
+                    <i class="bi bi-send-check me-1"></i> Submit Collection Request
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

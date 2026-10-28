@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% block content %}
+<div class="head"><div><h1>Welcome back 👋</h1><p class="mut">Here's what's happening at the clinic today</p></div>
+  <div class="tools"><a class="btn primary" href="/appointments?add=1">＋ Book appointment</a>
+  <a class="btn ghost" href="/owners?add=1">＋ Add owner</a><a class="btn ghost" href="/bills?add=1">＋ New bill</a></div></div>
+
+<div class="stats">
+{% for t, v, i, c, href in [('Owners', s.owners, '👤', 'c1', '/owners'), ('Pets', s.pets, '🐶', 'c2', '/pets'),
+  ('Upcoming visits', s.upcoming, '📅', 'c3', '/appointments'), ('Revenue (paid)', '₹{:,.0f}'.format(s.revenue), '💰', 'c4', '/bills'),
+  ('Pending dues', '₹{:,.0f}'.format(s.pending), '⏳', 'c5', '/bills'), ('Low stock items', s.lowstock, '💊', 'c6', '/medicines')] %}
+  <a class="stat {{ c }}" href="{{ href }}"><span class="ico">{{ i }}</span><div><small>{{ t }}</small><b>{{ v }}</b></div></a>
+{% endfor %}</div>
+
+<div class="grid">
+  <div class="card"><div class="chh"><h3>Monthly revenue (₹)</h3>
+    <div class="seg" id="seg"><button class="on" data-t="bar">Bar</button><button data-t="line">Line</button></div></div>
+    <div class="cv" id="w3"><canvas id="c3"></canvas></div><p class="hint">Click a bar to view that month's bills</p></div>
+  <div class="card"><div class="chh"><h3>Appointment status</h3></div>
+    <div class="cv" id="w2"><canvas id="c2"></canvas></div><p class="hint">Click a slice to filter · click the legend to hide</p></div>
+  <div class="card"><div class="chh"><h3>Pets by species</h3></div>
+    <div class="cv" id="w1"><canvas id="c1"></canvas></div><p class="hint">Click a slice to filter pets</p></div>
+  <div class="card"><div class="chh"><h3>Top prescribed medicines</h3></div>
+    <div class="cv" id="w4"><canvas id="c4"></canvas></div><p class="hint">Click a bar to open that medicine</p></div>
+</div>
+
+<div class="grid">
+  <div class="card"><div class="chh"><h3>⚠️ Low-stock alerts</h3><a class="lnk" href="/medicines">Manage →</a></div>
+  {% for m in low %}<div class="li"><span>{{ m.name }}</span><span class="badge cancelled">{{ m.stock_qty }} left · reorder at {{ m.reorder_level }}</span></div>
+  {% else %}<p class="mut">All medicines are well stocked 🎉</p>{% endfor %}</div>
+  <div class="card"><div class="chh"><h3>🧾 Unpaid bills</h3><a class="lnk" href="/bills">View all →</a></div>
+  {% for b in unpaid %}<div class="li"><span><b>{{ b.pet_name }}</b> <span class="mut">· {{ b.owner_name }}</span></span><b>₹{{ b.total_amount }}</b></div>
+  {% else %}<p class="mut">No pending payments 🎉</p>{% endfor %}</div>
+</div>
+
+<div class="card tbl"><div class="chh pad"><h3>Upcoming appointments</h3><a class="lnk" href="/appointments">View all →</a></div>
+<table><thead><tr><th>Date</th><th>Time</th><th>Pet</th><th>Owner</th><th>Vet</th><th>Reason</th></tr></thead><tbody>
+{% for a in upcoming %}<tr><td>{{ a.appt_date }}</td><td>{{ a.appt_time }}</td><td><b>{{ a.pet_name }}</b></td>
+<td>{{ a.owner_name }}</td><td>{{ a.vet_name }}</td><td>{{ a.reason }}</td></tr>
+{% else %}<tr><td colspan="6" class="empty">No upcoming appointments</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
+{% block js %}
+<script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

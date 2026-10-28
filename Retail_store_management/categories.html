@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Category Management - Retail Store Management System{% endblock %}
+{% block page_title %}Category Management{% endblock %}
+{% block page_subtitle %}Manage product classification and foreign-key relationships{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Card -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <div class="row g-2 align-items-center justify-content-between">
+      <div class="col-12 col-md-6">
+        <form method="GET" action="{{ url_for('categories') }}" class="d-flex gap-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" 
+                   name="q" 
+                   class="form-control border-start-0" 
+                   placeholder="Search category name or ID..." 
+                   value="{{ search_query }}">
+          </div>
+          <button type="submit" class="btn btn-primary px-3">
+            <i class="bi bi-funnel me-1"></i> Search
+          </button>
+          {% if search_query %}
+            <a href="{{ url_for('categories') }}" class="btn btn-outline-secondary" title="Clear Search">
+              <i class="bi bi-x-lg"></i>
+            </a>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="col-12 col-md-auto text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+          <i class="bi bi-plus-circle me-1"></i> Add New Category
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if search_query %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="small text-muted">
+    Showing results for: <strong>"{{ search_query }}"</strong> &bull; <strong>{{ categories | length }}</strong> category found
+  </div>
+  <a href="{{ url_for('categories') }}" class="btn btn-link btn-sm text-decoration-none p-0">Clear filter</a>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Categories Table Card -->
+  <div class="col-12 col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div class="content-card-title">
+          <i class="bi bi-tags text-primary"></i>
+          <span>Categories ({{ categories | length }} Total)</span>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+          Table: category
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table custom-table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th>Category Name</th>
+              <th>Assigned Products</th>
+              <th>Referential Status</th>
+              <th style="width: 140px;" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categories %}
+            <tr>
+              <!-- Category ID -->
+              <td class="font-monospace fw-bold text-muted">#{{ cat.category_id }}</td>
+
+              <!-- Category Name -->
+              <td>
+                <div class="fw-semibold text-dark fs-6">{{ cat.category_name }}</div>
+              </td>
+
+              <!-- Product Count -->
+              <td>
+                <a href="{{ url_for('products', category_id=cat.category_id) }}" class="badge bg-primary-subtle text-primary rounded-pill text-decoration-none px-3 py-1.5" title="Filter products in this category">
+                  <i class="bi bi-box-seam me-1"></i>{{ cat.product_count }} product{% if cat.product_count != 1 %}s{% endif %}
+                </a>
+              </td>
+
+              <!-- Foreign Key Protection Status -->
+              <td>
+                {% if cat.product_count > 0 %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" data-bs-toggle="tooltip" title="Protected by Foreign Key constraint: has active product associations">
+                    <i class="bi bi-lock-fill me-1"></i>Protected ({{ cat.product_count }})
+                  </span>
+                {% else %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-unlock-fill me-1"></i>Safe to Delete
+                  </span>
+                {% endif %}
+              </td>
+
+              <!-- Actions -->
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('edit_category', category_id=cat.category_id) }}" 
+                     class="btn btn-outline-primary" 
+                     data-bs-toggle="tooltip" 
+                     title="Edit Category">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                  <button type="button" 
+                          class="btn btn-outline-danger delete-cat-btn" 
+                          data-id="{{ cat.category_id }}" 
+                          data-name="{{ cat.category_name }}"
+                          data-count="{{ cat.product_count }}"
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteCategoryModal"
+                          title="Delete Category">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center py-5 text-muted">
+                <i class="bi bi-tag text-secondary fs-1 d-block mb-2"></i>
+                <h6 class="fw-bold text-dark">No Categories Found</h6>
+                {% if search_query %}
+                  <p class="small mb-2">No category matches "{{ search_query }}".</p>
+                  <a href="{{ url_for('categories') }}" class="btn btn-outline-primary btn-sm">Clear Search</a>
+                {% else %}
+                  <p class="small mb-2">The category table is currently empty.</p>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="bi bi-plus-circle me-1"></i> Add First Category
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schema Foreign Key Architecture Info Panel -->
+  <div class="col-12 col-lg-4">
+    <div class="content-card">
+      <div class="content-card-header">
+        <div class="content-card-title">
+          <i class="bi bi-diagram-3 text-info"></i>
+          <span>DBMS Referential Integrity</span>
+        </div>
+      </div>
+      <div class="content-card-body">
+        <p class="text-muted small">
+          In this relational DBMS design, <code>category</code> enforces a <strong>One-to-Many</strong> relationship with <code>product</code>.
+        </p>
+
+        <div class="p-3 bg-light rounded border mb-3">
+          <div class="small fw-bold text-dark mb-1">Foreign Key Definition:</div>
+          <div class="font-monospace small text-primary">
+            product.category_id &rarr; category.category_id
+          </div>
+          <div class="small text-secondary mt-1">Constraint: <code>product_ibfk_1</code></div>
+        </div>
+
+        <div class="alert alert-info py-2 px-3 small border-0 mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          <strong>DBMS Integrity Rule:</strong> A category cannot be deleted if any records in the <code>product</code> table reference its <code>category_id</code>.
+        </div>
+
+        <ul class="list-unstyled small text-muted mb-0">
+          <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Primary Key: <code>category_id (INT AUTO_INCREMENT)</code></li>
+          <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Unique Key: <code>category_name (VARCHAR 100)</code></li>
+          <li><i class="bi bi-shield-check text-success me-1"></i>Deletion Protection: <strong>Enforced via SQL &amp; Application</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     ADD CATEGORY MODAL
+     ========================================================= -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="addCategoryModalLabel">
+          <i class="bi bi-plus-circle me-1"></i> Add New Category
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('add_category') }}">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label for="category_name" class="form-label fw-semibold">
+              Category Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="category_name" 
+                   name="category_name" 
+                   placeholder="e.g. Dairy &amp; Bakery, Electronics" 
+                   maxlength="100" 
+                   required>
+            <div class="form-text">Must be unique across the category table (max 100 chars).</div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> Save Category
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     DELETE CATEGORY CONFIRMATION MODAL
+     ========================================================= -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold" id="deleteCategoryModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> Delete Category Confirmation
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="p-3 bg-light rounded border mb-3">
+          <div>Category ID: <strong id="deleteCategoryId">#</strong></div>
+          <div>Category Name: <strong id="deleteCategoryName" class="text-danger"></strong></div>
+          <div>Associated Products: <strong id="deleteCategoryCount">0</strong></div>
+        </div>
+
+        <div id="deleteWarningAlert" class="alert alert-warning small d-none">
+          <i class="bi bi-shield-lock-fill text-warning me-1"></i>
+          <strong>Integrity Warning:</strong> This category is currently assigned to <span id="warningProductCount">0</span> product(s). 
+          The database will reject this deletion to maintain referential integrity.
+        </div>
+
+        <p class="small text-muted mb-0">
+          Categories can only be removed when no products reference them.
+        </p>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteCategoryForm" method="POST" action="">
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-trash3 me-1"></i> Confirm Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal dynamic script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-cat-btn');
+    const deleteIdSpan = document.getElementById('deleteCategoryId');
+    const deleteNameSpan = document.getElementById('deleteCategoryName');
+    const deleteCountSpan = document.getElementById('deleteCategoryCount');
+    const warningAlert = document.getElementById('deleteWarningAlert');
+    const warningProductCount = document.getElementById('warningProductCount');
+    const deleteForm = document.getElementById('deleteCategoryForm');
+
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const catId = this.getAttribute('data-id');
+        const catName = this.getAttribute('data-name');
+        const prodCount = parseInt(this.getAttribute('data-count') || '0', 10);
+        
+        deleteIdSpan.textContent = '#' + catId;
+        deleteNameSpan.textContent = catName;
+        deleteCountSpan.textContent = prodCount + ' product(s)';
+        deleteForm.action = '/categories/delete/' + catId;
+
+        if (prodCount > 0) {
+          warningAlert.classList.remove('d-none');
+          warningProductCount.textContent = prodCount;
+        } else {
+          warningAlert.classList.add('d-none');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Library Management System</title>
+<link rel="stylesheet" href="/static/style.css"></head><body>
+
+<div id="loginView" class="login" hidden>
+  <form id="fLogin" class="card login-card" autocomplete="on">
+    <div class="logo">📚</div>
+    <h1>Library Management System</h1>
+    <p class="muted">RSCOE · Department of Computer Science and Business Systems</p>
+    <label>Username<input name="username" autocomplete="username" required autofocus></label>
+    <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="btn">Sign in</button>
+    <p id="loginErr" class="err" role="alert"></p>
+  </form>
+</div>
+
+<div id="appView" hidden>
+<header><h1>📚 Library Management System</h1>
+  <nav id="nav"></nav>
+  <div class="who"><span id="whoami"></span><button class="btn sm ghost" id="btnPw">Password</button><button class="btn sm ghost" id="btnOut">Sign out</button></div>
+</header>
+<main>
+<section class="sec" id="dash"><div class="grid" id="stats"></div>
+  <div class="card"><h2>Currently issued books</h2><div id="dashOpen"></div></div></section>
+
+<section class="sec" id="books">
+  <div class="card"><h2>Add a book</h2>
+   <form id="fBook" class="row"><label>Title<input name="title" maxlength="120" required></label><label>Author<input name="author" maxlength="80" required></label>
+   <label>Category<input name="category" maxlength="40"></label><label class="narrow">Copies<input name="quantity" type="number" min="0" max="1000" value="1"></label><button class="btn">Add book</button></form></div>
+  <div class="card"><div class="bar"><h2>Books</h2><input class="search" id="qBook" placeholder="Search title, author or category…"><a class="btn sm ghost" href="/api/export/books.csv">Export CSV</a></div><div id="tBooks"></div><div class="pager" id="pBooks"></div></div></section>
+
+<section class="sec" id="members">
+  <div class="card"><h2>Register a member</h2>
+   <form id="fMem" class="row"><label>Name<input name="name" maxlength="80" required></label><label>Department<input name="department" maxlength="40"></label>
+   <label>Phone (10 digits)<input name="phone" maxlength="10" inputmode="numeric" pattern="[0-9]{10}"></label><button class="btn">Add member</button></form></div>
+  <div class="card"><div class="bar"><h2>Members</h2><input class="search" id="qMem" placeholder="Search name, department or phone…"><a class="btn sm ghost" href="/api/export/members.csv">Export CSV</a></div><div id="tMem"></div><div class="pager" id="pMem"></div></div></section>
+
+<section class="sec" id="issue">
+  <div class="card"><h2>Issue a book</h2>
+   <form id="fIssue" class="row"><label>Member<select name="member_id" id="selM" required></select></label><label>Book<select name="book_id" id="selB" required></select></label><button class="btn gold">Issue book</button></form>
+   <p class="muted small" id="rules"></p></div>
+  <div class="card"><div class="bar"><h2>Issue &amp; return records</h2><input class="search" id="qIss" placeholder="Search member or book…">
+   <select id="stIss"><option value="all">All</option><option value="open">Issued</option><option value="overdue">Overdue</option><option value="returned">Returned</option></select>
+   <a class="btn sm ghost" href="/api/export/issues.csv">Export CSV</a></div><div id="tIssues"></div><div class="pager" id="pIssues"></div></div></section>
+
+<section class="sec" id="fines"><div class="card"><div class="bar"><h2>Fines</h2>
+  <select id="stFine"><option value="all">All</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select>
+  <a class="btn sm ghost" href="/api/export/fines.csv">Export CSV</a></div><div id="tFines"></div><div class="pager" id="pFines"></div></div></section>
+
+<section class="sec" id="reports">
+  <div class="card"><h2>Overdue books</h2><div id="rOver"></div></div>
+  <div class="two"><div class="card"><h2>Most borrowed books</h2><div id="rTop"></div></div>
+  <div class="card"><h2>Books by category</h2><div id="rCat"></div></div></div>
+  <div class="card" id="auditCard" hidden><h2>Activity log (administrator)</h2><div id="tAudit"></div><div class="pager" id="pAudit"></div></div></section>
+</main></div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm"><h2 id="dlgTitle"></h2><div id="dlgBody" class="dlgbody"></div>
+ <div class="dlgbtn"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn" value="ok" id="dlgOk">Save</button></div></form></dialog>
+<div id="toast" role="status"></div>
+<script src="/static/app.js"></script></body></html>

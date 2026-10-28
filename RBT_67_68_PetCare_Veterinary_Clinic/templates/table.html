@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block content %}
+<div class="head"><div><h1>{{ e.icon }} {{ e.title }}</h1><p class="mut">{{ rows|length }} record{{ '' if rows|length == 1 else 's' }} in the system</p></div>
+  <div class="tools"><input id="q" class="search" placeholder="🔍 Search {{ e.title|lower }}…">
+  <button class="btn ghost" id="exp" type="button">⬇ Export CSV</button>
+  <button class="btn primary" type="button" onclick="openAdd()">＋ Add new</button></div></div>
+
+<form id="addf" class="card form hide" method="post" action="/{{ name }}/add" data-name="{{ name }}">
+<h3 id="ftitle" class="full">Add new {{ e.title|lower }}</h3>
+{% for f in fields %}<label {% if (name == 'treatments' and f.col == 'appointment_id') or (name == 'owners' and f.col == 'phone') %}data-noedit{% endif %}>{{ f.label }}
+  {% if f.type == 'select' %}<select name="{{ f.col }}" required>{% for o in f.opts %}<option value="{{ o.v }}">{{ o.l }}</option>{% endfor %}</select>
+  {% elif f.type == 'enum' %}<select name="{{ f.col }}" required>{% for o in f.opts %}<option>{{ o }}</option>{% endfor %}</select>
+  {% else %}<input type="{{ f.type }}" name="{{ f.col }}" required {% if f.type == 'number' %}step="any" min="0"{% endif %}>{% endif %}
+</label>{% endfor %}
+<div class="full btnrow"><button class="btn primary" id="savebtn">Save</button>
+<button type="button" class="btn ghost" onclick="document.getElementById('addf').classList.add('hide')">Cancel</button></div></form>
+
+<div class="card tbl"><table id="t" data-name="{{ name }}"><thead><tr>{% for c in cols %}<th class="sortable">{{ c }}</th>{% endfor %}{% if cols %}<th class="stick">Actions</th>{% endif %}</tr></thead><tbody>
+{% for r in rows %}<tr {% if name == 'medicines' and r['Stock'] <= r['Reorder at'] %}class="low" title="Low stock"{% endif %}>
+{% for c in cols %}{% set v = r[c] %}<td>
+  {% if name in ['owners', 'pets'] and c == 'Name' %}<a class="lnk" href="/{{ name }}/{{ r['ID'] }}">{{ v }}</a>
+  {% elif v in ['Scheduled', 'Completed', 'Cancelled', 'Paid', 'Unpaid'] %}<span class="badge {{ v|lower }}">{{ v }}</span>
+  {% else %}{{ v if v is not none else '—' }}{% endif %}</td>{% endfor %}
+<td class="act stick">
+  {% if name == 'appointments' and r['Status'] == 'Scheduled' %}
+    <form method="post" action="/appointments/{{ r['ID'] }}/cancel"><button class="mini warn">Cancel</button></form>{% endif %}
+  {% if name == 'bills' %}<a class="mini inv" href="/bills/{{ r['ID'] }}/invoice" target="_blank">🧾 Invoice</a>{% endif %}
+  {% if name == 'bills' and r['Status'] == 'Unpaid' %}
+    <form method="post" action="/bills/{{ r['ID'] }}/pay"><select name="method"><option>Cash</option><option>Card</option><option>UPI</option></select>
+    <button class="mini ok">Pay</button></form>{% endif %}
+  {% if e.pk and name != 'bills' %}<button type="button" class="mini edit" data-edit="{{ r['ID'] }}" data-name="{{ name }}">✎ Edit</button>{% endif %}
+  {% if e.pk %}<form method="post" action="/{{ name }}/delete/{{ r['ID'] }}" onsubmit="return confirm('Delete this record?')">
+    <button class="mini bad">🗑 Delete</button></form>{% endif %}
+</td></tr>
+{% else %}<tr class="emptyrow"><td colspan="10" class="empty">No records yet — click “Add new” to create one.</td></tr>{% endfor %}</tbody></table>
+<div class="pager"><span id="pinfo" class="mut"></span><div><button class="btn ghost sm" id="prev">‹ Prev</button> <button class="btn ghost sm" id="next">Next ›</button></div></div></div>
+{% endblock %}

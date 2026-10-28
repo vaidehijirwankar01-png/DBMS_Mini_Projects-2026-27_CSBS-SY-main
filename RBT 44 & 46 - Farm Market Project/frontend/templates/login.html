@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ role|capitalize }} Login</h2>
+<form method="post" class="card">
+  <p>{% if role == 'admin' %}Username{% else %}{{ role|capitalize }} ID{% endif %}:
+     <input name="uid" required></p>
+  <p>Password: <input type="password" name="password" required></p>
+  <button>Login</button>
+  {% if role != 'admin' %}<a href="{{ url_for('register', role=role) }}">New? Register</a>{% endif %}
+</form>
+{% endblock %}

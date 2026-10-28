@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Navigation bar shown on every page -->
+    <nav>
+        <a href="/">Expenses</a> |
+        <a href="/add">Add expense</a> |
+        <a href="/budget">Budget</a> |
+        <a href="/backups">Backups</a>
+    </nav>
+
+    <hr>
+
+    <!-- Each page puts its own content here -->
+    {% block content %}{% endblock %}
+
+</body>
+</html>

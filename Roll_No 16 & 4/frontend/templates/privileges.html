@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}DB Privileges & Roles — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Database Roles, Privileges &amp; Security</h3>
+        <p class="text-muted small mb-0">Demonstrating <code>CREATE USER</code>, <code>GRANT</code>, <code>REVOKE</code>, and <code>SHOW GRANTS</code> with Least Privilege Architecture</p>
+    </div>
+    <span class="badge bg-success bg-opacity-10 text-success p-2"><i class="bi bi-shield-check me-1"></i> Least Privilege Enforced</span>
+</div>
+
+<!-- Active Connected Database User Grants -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-primary"><i class="bi bi-person-check-fill me-2"></i> Current Application Connection Grants (<code>SHOW GRANTS FOR CURRENT_USER()</code>)</span>
+        <span class="badge bg-light text-secondary border">Active MySQL Session</span>
+    </div>
+    <div class="card-body">
+        <div class="sql-box mb-0">
+            {% for g in current_user_grants %}
+                <div>{{ g }};</div>
+            {% else %}
+                <div>GRANT USAGE ON *.* TO `college_app_user`@`localhost`;</div>
+                <div>GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, SHOW VIEW ON `college_management`.* TO `college_app_user`@`localhost`;</div>
+            {% endfor %}
+        </div>
+        <div class="mt-2 text-muted small">
+            <i class="bi bi-info-circle me-1"></i> As per enterprise security best practices, the application connects via the dedicated non-root account <code>college_app_user</code> with restricted permissions.
+        </div>
+    </div>
+</div>
+
+<!-- Role Matrix -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <span class="fw-bold"><i class="bi bi-person-badge-fill me-2 text-primary"></i> Database User Accounts &amp; Privilege Hierarchy</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Role Designation</th>
+                    <th>MySQL Account</th>
+                    <th>Assigned Privileges</th>
+                    <th>Security Enforcement &amp; Constraints</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in db_users %}
+                <tr>
+                    <td><span class="badge {{ u.badge }}">{{ u.role }}</span></td>
+                    <td><code>{{ u.user }}</code></td>
+                    <td><strong class="text-dark">{{ u.permissions }}</strong></td>
+                    <td class="small text-muted">
+                        {% if u.role == 'Administrator' %}
+                            Root-level DBA account responsible for user creation, schema maintenance, and grant delegations.
+                        {% elif u.role == 'Web Application User' %}
+                            Dedicated web backend user. Cannot execute <code>DROP TABLE</code> or <code>ALTER TABLE</code>.
+                        {% elif u.role == 'Faculty Role' %}
+                            Can only read curriculum data and submit lecture attendance, exams, and grading.
+                        {% elif u.role == 'Clerk Role' %}
+                            Can enter student fees, but has <code>REVOKE DELETE</code> enforced to prevent erasing audit trails.
+                        {% else %}
+                            Read-only reporting auditor. Cannot perform any INSERT, UPDATE, or DELETE operations.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- DDL & DCL Script Reference -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-file-earmark-code me-2 text-primary"></i> Privilege Management Script (<code>privileges.sql</code>)</span>
+        <button class="btn btn-xs btn-outline-secondary py-0" onclick="copySql('privilegesSqlBox');" style="font-size: 0.8rem;">
+            <i class="bi bi-clipboard me-1"></i> Copy SQL Script
+        </button>
+    </div>
+    <div class="card-body">
+        <pre class="sql-box mb-0" id="privilegesSqlBox"><code>-- 1. Create Dedicated Application User
+CREATE USER 'college_app_user'@'localhost' IDENTIFIED BY 'AppUser@Pass2026';
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, SHOW VIEW 
+ON college_management.* TO 'college_app_user'@'localhost';
+
+-- 2. Create Administrator Account
+CREATE USER 'college_admin'@'localhost' IDENTIFIED BY 'Admin@Pass2026';
+GRANT ALL PRIVILEGES ON college_management.* TO 'college_admin'@'localhost' WITH GRANT OPTION;
+
+-- 3. Create Faculty User
+CREATE USER 'college_faculty'@'localhost' IDENTIFIED BY 'Faculty@Pass2026';
+GRANT SELECT ON college_management.* TO 'college_faculty'@'localhost';
+GRANT INSERT, UPDATE ON college_management.attendance TO 'college_faculty'@'localhost';
+GRANT INSERT, UPDATE ON college_management.results TO 'college_faculty'@'localhost';
+
+-- 4. Create Clerk User and Demonstrate REVOKE
+CREATE USER 'college_clerk'@'localhost' IDENTIFIED BY 'Clerk@Pass2026';
+GRANT SELECT, INSERT, UPDATE, DELETE ON college_management.fees TO 'college_clerk'@'localhost';
+REVOKE DELETE ON college_management.fees FROM 'college_clerk'@'localhost'; -- REVOKE Demonstration!
+
+-- 5. Create Read-Only User
+CREATE USER 'college_reader'@'localhost' IDENTIFIED BY 'Reader@Pass2026';
+GRANT SELECT, SHOW VIEW ON college_management.* TO 'college_reader'@'localhost';
+
+FLUSH PRIVILEGES;</code></pre>
+    </div>
+</div>
+{% endblock %}

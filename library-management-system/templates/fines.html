@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Fines Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Fines &amp; Penalties Management</h1>
+    <p class="page-subtitle">Demonstrating Financial Integrity, Aggregate Summaries &amp; Payment Transactions</p>
+  </div>
+</div>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Total Fines Assessed</span>
+    <span class="metric-value">${{ "%.2f"|format(total_assessed) }}</span>
+    <span class="metric-footer">Cumulative penalties issued</span>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">Total Collected</span>
+    <span class="metric-value" style="color:var(--success);">${{ "%.2f"|format(total_collected) }}</span>
+    <span class="metric-footer">Payments successfully cleared</span>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">Outstanding Unpaid</span>
+    <span class="metric-value" style="color:var(--danger);">${{ "%.2f"|format(total_pending) }}</span>
+    <span class="metric-footer">Pending collection from members</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Detailed Fines Ledger</h3>
+    <div style="flex:1;max-width:280px;margin-left:auto;">
+      <input type="text" id="finesFilter" placeholder="🔍 Search by member or book..." onkeyup="filterTable('finesFilter', 'finesTable')">
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table id="finesTable">
+      <thead>
+        <tr>
+          <th>Fine ID</th>
+          <th>Loan Ref</th>
+          <th>Member</th>
+          <th>Book Title</th>
+          <th>Fine Amount</th>
+          <th>Issued Date</th>
+          <th>Payment Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fine in fines %}
+        <tr>
+          <td><strong>#{{ fine.fine_id }}</strong></td>
+          <td>Loan #{{ fine.loan_id }}</td>
+          <td>
+            <strong>{{ fine.member_name }}</strong>
+            <div style="font-size:0.75rem;color:var(--text-muted);">{{ fine.member_email }}</div>
+          </td>
+          <td>{{ fine.book_title }}</td>
+          <td><strong style="font-size:1rem;color:var(--dark);">${{ "%.2f"|format(fine.fine_amount) }}</strong></td>
+          <td>{{ fine.fine_date }}</td>
+          <td>
+            {% if fine.paid_status == 'Paid' %}
+              <span class="badge badge-success">Paid on {{ fine.paid_date }}</span>
+            {% else %}
+              <span class="badge badge-danger">Unpaid</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if fine.paid_status == 'Unpaid' %}
+              <form action="{{ url_for('pay_fine_route', fine_id=fine.fine_id) }}" method="POST" onsubmit="return confirm('Collect payment of ${{ fine.fine_amount }} from {{ fine.member_name }}?');">
+                <button type="submit" class="btn btn-primary btn-sm">Collect Payment</button>
+              </form>
+            {% else %}
+              <span style="color:var(--text-muted);font-size:0.8rem;">✓ Settled</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No fine records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Member Fines Aggregation (v_member_fines) -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Member Fines Summary <span class="sql-badge">View: v_member_fines</span></h3>
+  </div>
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Member ID</th>
+          <th>Member Name</th>
+          <th>Email</th>
+          <th>Total Fines Recorded</th>
+          <th>Incurred ($)</th>
+          <th>Paid ($)</th>
+          <th>Outstanding Balance ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mf in member_fines %}
+        <tr>
+          <td><strong>#{{ mf.member_id }}</strong></td>
+          <td>{{ mf.member_name }}</td>
+          <td>{{ mf.email }}</td>
+          <td>{{ mf.total_fines_count }}</td>
+          <td>${{ "%.2f"|format(mf.total_fine_incurred) }}</td>
+          <td>${{ "%.2f"|format(mf.total_fine_paid) }}</td>
+          <td>
+            {% if mf.total_fine_outstanding > 0 %}
+              <strong style="color:var(--danger);">${{ "%.2f"|format(mf.total_fine_outstanding) }}</strong>
+            {% else %}
+              <span style="color:var(--success);">$0.00</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

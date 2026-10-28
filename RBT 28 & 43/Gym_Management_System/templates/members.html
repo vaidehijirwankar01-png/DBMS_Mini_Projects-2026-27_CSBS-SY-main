@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h3>Members</h3><a class="btn btn-primary" href="/members/add">+ Add Member</a>
+</div>
+<table class="table table-striped bg-white">
+  <tr><th>ID</th><th>Name</th><th>Address</th><th>Age</th><th>Trainer</th><th>Phones</th><th></th></tr>
+  {% for m in members %}
+  <tr>
+    <td>{{ m.member_id }}</td><td>{{ m.name }}</td><td>{{ m.address }}</td><td>{{ m.age }}</td>
+    <td>{{ m.trainer_name or "-" }}</td><td>{{ m.phones or "-" }}</td>
+    <td class="d-flex gap-1">
+      <a class="btn btn-sm btn-outline-primary" href="/members/{{ m.member_id }}">View</a>
+      <form method="post" action="/members/{{ m.member_id }}/delete" onsubmit="return confirm('Delete this member?')">
+        <button class="btn btn-sm btn-outline-danger">Delete</button></form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

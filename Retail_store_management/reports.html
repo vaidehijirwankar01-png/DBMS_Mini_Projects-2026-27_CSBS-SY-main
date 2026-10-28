@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Retail Store Management System{% endblock %}
+{% block page_title %}Analytics &amp; DBMS Reports{% endblock %}
+{% block page_subtitle %}Aggregated business insights and database metrics{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Key Metrics Summary Table -->
+  <div class="col-12 col-lg-7">
+    <div class="content-card">
+      <div class="content-card-header">
+        <div class="content-card-title">
+          <i class="bi bi-graph-up text-primary"></i>
+          <span>Database Summary Report</span>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+          SQL Aggregation
+        </span>
+      </div>
+      <div class="table-responsive">
+        <table class="table custom-table">
+          <thead>
+            <tr>
+              <th>Metric Name</th>
+              <th>SQL Calculation</th>
+              <th>Live Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="fw-semibold">Total Product Lines</td>
+              <td><code>COUNT(*) FROM product</code></td>
+              <td><span class="badge bg-primary">{{ metrics.total_products }}</span></td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Registered Customers</td>
+              <td><code>COUNT(*) FROM customer</code></td>
+              <td><span class="badge bg-success">{{ metrics.total_customers }}</span></td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Registered Suppliers</td>
+              <td><code>COUNT(*) FROM supplier</code></td>
+              <td><span class="badge bg-warning text-dark">{{ metrics.total_suppliers }}</span></td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Sales Completed</td>
+              <td><code>COUNT(*) FROM sale</code></td>
+              <td><span class="badge bg-secondary">{{ metrics.total_sales }}</span></td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Gross Revenue</td>
+              <td><code>SUM(total_amount) FROM sale</code></td>
+              <td class="fw-bold text-success">₹{{ "%.2f"|format(metrics.total_sales_amount) }}</td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Inventory Physical Units</td>
+              <td><code>SUM(quantity) FROM product</code></td>
+              <td><strong>{{ metrics.total_inventory_units }}</strong></td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Total Inventory Valuation</td>
+              <td><code>SUM(quantity * price) FROM product</code></td>
+              <td class="fw-bold text-dark">₹{{ "%.2f"|format(metrics.total_inventory_valuation) }}</td>
+            </tr>
+            <tr>
+              <td class="fw-semibold">Low Stock Items (&le; {{ metrics.low_stock_threshold }})</td>
+              <td><code>COUNT(*) WHERE quantity &le; 20</code></td>
+              <td><span class="badge {{ 'bg-danger' if metrics.low_stock_count > 0 else 'bg-success' }}">{{ metrics.low_stock_count }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Inventory Value Breakdown -->
+  <div class="col-12 col-lg-5">
+    <div class="content-card">
+      <div class="content-card-header">
+        <div class="content-card-title">
+          <i class="bi bi-pie-chart text-info"></i>
+          <span>Products Per Category</span>
+        </div>
+      </div>
+      <div class="content-card-body">
+        {% for cat in metrics.category_distribution %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold text-dark">{{ cat.category_name }}</span>
+            <span class="small text-muted">{{ cat.product_count }} items</span>
+          </div>
+          {% set pct = (cat.product_count / metrics.total_products * 100)|round|int if metrics.total_products > 0 else 0 %}
+          <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">
+        <div class="content-card-title">
+          <i class="bi bi-server text-secondary"></i>
+          <span>Database Information</span>
+        </div>
+      </div>
+      <div class="content-card-body small">
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-muted">DBMS Engine:</span>
+          <strong>MySQL Community {{ metrics.server_version }}</strong>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-muted">Active Schema:</span>
+          <strong class="font-monospace text-primary">{{ metrics.database }}</strong>
+        </div>
+        <div class="d-flex justify-content-between py-1">
+          <span class="text-muted">Total Tables:</span>
+          <strong>7 Tables (Category, Product, Supplier, Customer, Employee, Sale, Sale_Item)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

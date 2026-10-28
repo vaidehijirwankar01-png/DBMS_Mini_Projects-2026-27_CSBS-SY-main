@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - ShopDB</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      🛍️ <span>ShopDB</span> Prototype
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Shop</a>
+      <a href="orders.html" class="active">My Orders</a>
+      <a href="dashboard.html">Admin Dashboard</a>
+      <a href="login.html" class="user-badge">👤 <span id="userName">Test User (ID: 1)</span></a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <h2>📦 Order History</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          Showing joined data from <code>ORDERS</code>, <code>PAYMENT</code>, <code>SHIPMENT</code>, and <code>ADDRESS</code>
+        </p>
+      </div>
+      <a href="index.html" class="btn btn-secondary">← Back to Shopping</a>
+    </div>
+
+    <!-- Orders Table Container -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Carrier / Tracking</th>
+            <th>Delivery Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+              Loading orders...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Order Items Modal -->
+  <div class="modal" id="orderItemsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalOrderTitle">Order Items</h3>
+        <button class="close-btn" onclick="document.getElementById('orderItemsModal').classList.remove('active')">&times;</button>
+      </div>
+      <div id="modalOrderItemsContent" style="margin-top: 10px;">
+        Loading items...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const customerId = localStorage.getItem('customer_id') || 1;
+    const customerName = localStorage.getItem('customer_name') || 'Test User';
+    document.getElementById('userName').textContent = `${customerName} (ID: ${customerId})`;
+
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersBody');
+      try {
+        const res = await fetch(`/api/orders/${customerId}`);
+        const orders = await res.json();
+
+        if (!Array.isArray(orders) || orders.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                No orders placed yet. <a href="index.html" style="color: var(--primary);">Go shopping now!</a>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = orders.map(o => `
+          <tr>
+            <td><strong>#${o.order_id}</strong></td>
+            <td>${o.order_date ? o.order_date.slice(0, 10) : 'N/A'}</td>
+            <td><strong style="color: #0f172a;">₹${Number(o.total_amount).toFixed(2)}</strong></td>
+            <td>
+              <span class="badge badge-success">${o.payment_method || 'UPI'} (${o.payment_status || 'Paid'})</span>
+            </td>
+            <td>
+              <div><strong>${o.carrier || 'Standard'}</strong></div>
+              <small style="color: var(--text-muted); font-family: monospace;">${o.tracking_no || 'N/A'}</small>
+            </td>
+            <td>
+              <span class="badge badge-info">${o.delivery_status || 'Processing'}</span>
+            </td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="viewItems(${o.order_id})">
+                View Items
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--danger); padding: 30px;">
+              Failed to load order history. Make sure server is running.
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    async function viewItems(orderId) {
+      const modal = document.getElementById('orderItemsModal');
+      const content = document.getElementById('modalOrderItemsContent');
+      document.getElementById('modalOrderTitle').textContent = `Items in Order #${orderId}`;
+      modal.classList.add('active');
+      content.innerHTML = 'Loading items from ORDER_ITEM...';
+
+      try {
+        const res = await fetch(`/api/order-details/${orderId}`);
+        const items = await res.json();
+
+        if (!items || items.length === 0) {
+          content.innerHTML = '<p>No item details found.</p>';
+          return;
+        }
+
+        content.innerHTML = `
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border);">
+                <th style="padding: 8px 4px;">Product</th>
+                <th style="padding: 8px 4px;">Category</th>
+                <th style="padding: 8px 4px; text-align: center;">Qty</th>
+                <th style="padding: 8px 4px; text-align: right;">Unit Price</th>
+                <th style="padding: 8px 4px; text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it => `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 8px 4px;"><strong>${it.product_name}</strong></td>
+                  <td style="padding: 8px 4px;"><span class="badge badge-info">${it.category_name}</span></td>
+                  <td style="padding: 8px 4px; text-align: center;">${it.quantity}</td>
+                  <td style="padding: 8px 4px; text-align: right;">₹${Number(it.unit_price).toFixed(2)}</td>
+                  <td style="padding: 8px 4px; text-align: right; font-weight: 600;">₹${(it.quantity * it.unit_price).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        content.innerHTML = '<p style="color: var(--danger);">Failed to load order details.</p>';
+      }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

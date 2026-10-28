@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Retail Store Management System{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Hero Section -->
+  <div class="col-12">
+    <div class="hero-card">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <h1 class="display-6 fw-bold mb-2">Retail Store Management System</h1>
+          <p class="hero-subtitle mb-0">
+            College DBMS Project &bull; Python Flask &bull; MySQL Database (<span class="text-info font-monospace">{{ db_status.database }}</span>)
+          </p>
+        </div>
+        <div>
+          {% if db_status.success %}
+            <span class="status-pill connected shadow-sm">
+              <span class="status-dot connected"></span>
+              MySQL Connected
+            </span>
+          {% else %}
+            <span class="status-pill disconnected shadow-sm">
+              <span class="status-dot disconnected"></span>
+              MySQL Disconnected
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Database Connection Status Card -->
+  <div class="col-12">
+    {% if db_status.success %}
+      <div class="alert alert-success d-flex align-items-start gap-3 shadow-sm border-0 mb-0" role="alert">
+        <i class="bi bi-check-circle-fill fs-3 text-success flex-shrink-0"></i>
+        <div>
+          <h5 class="alert-heading fw-bold mb-1">Database Connected Successfully</h5>
+          <p class="mb-1 text-secondary">
+            Flask is connected to the existing MySQL database 
+            <strong class="text-dark font-monospace">{{ db_status.database }}</strong> on 
+            <strong class="text-dark font-monospace">{{ db_status.host }}:{{ db_status.port }}</strong>.
+          </p>
+          <div class="small text-muted">
+            <span class="me-3"><i class="bi bi-hdd-network me-1"></i>Server: MySQL v{{ db_status.version }}</span>
+            <span class="me-3"><i class="bi bi-person-badge me-1"></i>User: {{ db_status.user }}</span>
+            <span><i class="bi bi-table me-1"></i>Verified Tables: {{ db_status.tables | length }} tables tracked</span>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-danger d-flex align-items-start gap-3 shadow-sm border-0 mb-0" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-3 text-danger flex-shrink-0"></i>
+        <div>
+          <h5 class="alert-heading fw-bold mb-1">Database Connection Failed</h5>
+          <p class="mb-2 text-danger-emphasis">
+            Could not connect to MySQL database 
+            <strong class="font-monospace">{{ db_status.database }}</strong>.
+          </p>
+          <div class="p-2 bg-white rounded border border-danger-subtle font-monospace small text-danger">
+            {{ db_status.error }}
+          </div>
+          <p class="mt-2 mb-0 small text-muted">
+            Please check your <code>.env</code> file credentials (host, port, user, password, and database name).
+          </p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Database Tables Section -->
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="fw-bold mb-0">Database Tables</h4>
+        <small class="text-muted">7 core tables in <span class="font-monospace">retail_store</span> database</small>
+      </div>
+      <span class="badge bg-primary rounded-pill px-3 py-2">
+        {{ db_status.tables | length }} Tables Registered
+      </span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+      <!-- 1. Category -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-category">
+              <i class="bi bi-tags"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Category.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Category.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Category.row_count if db_status.tables.Category else 0 }}</div>
+          <div class="stat-label">Category</div>
+          <small class="text-muted d-block mt-1">Product categories</small>
+        </div>
+      </div>
+
+      <!-- 2. Product -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-product">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Product.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Product.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Product.row_count if db_status.tables.Product else 0 }}</div>
+          <div class="stat-label">Product</div>
+          <small class="text-muted d-block mt-1">Store inventory items</small>
+        </div>
+      </div>
+
+      <!-- 3. Supplier -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-supplier">
+              <i class="bi bi-truck"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Supplier.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Supplier.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Supplier.row_count if db_status.tables.Supplier else 0 }}</div>
+          <div class="stat-label">Supplier</div>
+          <small class="text-muted d-block mt-1">Wholesale suppliers</small>
+        </div>
+      </div>
+
+      <!-- 4. Customer -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-customer">
+              <i class="bi bi-people"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Customer.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Customer.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Customer.row_count if db_status.tables.Customer else 0 }}</div>
+          <div class="stat-label">Customer</div>
+          <small class="text-muted d-block mt-1">Registered customers</small>
+        </div>
+      </div>
+
+      <!-- 5. Employee -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-employee">
+              <i class="bi bi-person-badge"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Employee.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Employee.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Employee.row_count if db_status.tables.Employee else 0 }}</div>
+          <div class="stat-label">Employee</div>
+          <small class="text-muted d-block mt-1">Store staff members</small>
+        </div>
+      </div>
+
+      <!-- 6. Sale -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-sale">
+              <i class="bi bi-receipt"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Sale.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Sale.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Sale.row_count if db_status.tables.Sale else 0 }}</div>
+          <div class="stat-label">Sale</div>
+          <small class="text-muted d-block mt-1">Sales transactions</small>
+        </div>
+      </div>
+
+      <!-- 7. Sale_Item -->
+      <div class="col">
+        <div class="table-stat-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="table-icon-wrapper icon-sale_item">
+              <i class="bi bi-cart-check"></i>
+            </div>
+            <span class="badge {{ 'bg-success-subtle text-success' if db_status.tables.Sale_Item.exists else 'bg-danger-subtle text-danger' }}">
+              {{ 'Exists' if db_status.tables.Sale_Item.exists else 'Missing' }}
+            </span>
+          </div>
+          <div class="stat-number">{{ db_status.tables.Sale_Item.row_count if db_status.tables.Sale_Item else 0 }}</div>
+          <div class="stat-label">Sale_Item</div>
+          <small class="text-muted d-block mt-1">Transaction item line details</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Architecture Summary -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h5 class="fw-bold mb-0">Project Architecture &amp; Tech Stack</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <div class="p-3 rounded bg-light border">
+              <div class="text-muted small">Frontend</div>
+              <div class="fw-bold text-dark mt-1">HTML, CSS, Bootstrap 5, JS</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 rounded bg-light border">
+              <div class="text-muted small">Backend</div>
+              <div class="fw-bold text-dark mt-1">Python Flask (3.1.x)</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 rounded bg-light border">
+              <div class="text-muted small">Database</div>
+              <div class="fw-bold text-dark mt-1">MySQL Server (retail_store)</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="p-3 rounded bg-light border">
+              <div class="text-muted small">Driver</div>
+              <div class="fw-bold text-dark mt-1">PyMySQL + python-dotenv</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

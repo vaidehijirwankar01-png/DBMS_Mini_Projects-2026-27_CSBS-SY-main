@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Enrollments — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Course Enrollments</h3>
+        <p class="text-muted small mb-0">Manage student course registrations across academic terms &bull; Enforces UNIQUE constraint</p>
+    </div>
+    {% if session.get('role') in ['Admin', 'Faculty', 'Clerk'] %}
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEnrollmentModal">
+        <i class="bi bi-journal-plus me-1"></i> Enroll Student in Course
+    </button>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-check me-2 text-primary"></i> Active Registrations ({{ enrollments|length }})</span>
+        <div style="width: 250px;">
+            <input type="text" class="form-control form-control-sm table-search-input" data-target-table="enrollTable" placeholder="Filter enrollments...">
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="enrollTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Course Code & Name</th>
+                    <th>Credits</th>
+                    <th>Instructor</th>
+                    <th>Term / Year</th>
+                    <th>Date</th>
+                    {% if session.get('role') == 'Admin' %}
+                    <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in enrollments %}
+                <tr>
+                    <td><code>#{{ e.enrollment_id }}</code></td>
+                    <td><code>{{ e.roll_number }}</code></td>
+                    <td class="fw-semibold">{{ e.student_name }}</td>
+                    <td>
+                        <strong class="text-primary">{{ e.course_code }}</strong> — {{ e.course_name }}
+                    </td>
+                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ e.credits }} Cr</span></td>
+                    <td><small class="text-muted"><i class="bi bi-person me-1"></i>{{ e.instructor_name }}</small></td>
+                    <td><span class="badge bg-light text-dark border">{{ e.academic_year }} (Sem {{ e.semester }})</span></td>
+                    <td><small class="text-muted">{{ e.enrollment_date }}</small></td>
+                    {% if session.get('role') == 'Admin' %}
+                    <td class="text-end">
+                        <form method="POST" action="{{ url_for('delete_enrollment', enrollment_id=e.enrollment_id) }}" class="d-inline" onsubmit="return confirmDelete('enrollment');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Drop Enrollment">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">No enrollments recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Enrollment Modal -->
+<div class="modal fade" id="addEnrollmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_enrollment') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enroll Student in Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Student</label>
+                        <select class="form-select" name="student_id" required>
+                            {% for s in students %}
+                                <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Course</label>
+                        <select class="form-select" name="course_id" required>
+                            {% for c in courses %}
+                                <option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Academic Year</label>
+                            <input type="text" class="form-control" name="academic_year" value="2024-2025" placeholder="e.g. 2024-2025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Semester (1-8)</label>
+                            <input type="number" class="form-control" name="semester" value="4" min="1" max="8" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Enrollment Date</label>
+                        <input type="date" class="form-control" name="enrollment_date" value="{{ None }}" required>
+                    </div>
+                    <div class="alert alert-info py-2 small mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Protected by MySQL <code>UNIQUE(student_id, course_id, academic_year, semester)</code> to prevent duplicate enrollments.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Confirm Enrollment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Triggers & Audit — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">MySQL Triggers &amp; Audit Trail</h3>
+        <p class="text-muted small mb-0">Enforcing database integrity with <code>BEFORE INSERT</code>, <code>AFTER INSERT</code>, <code>BEFORE UPDATE</code>, <code>AFTER UPDATE</code>, <code>AFTER DELETE</code></p>
+    </div>
+    <span class="badge bg-primary bg-opacity-10 text-primary p-2">Table: <code>student_audit_log</code></span>
+</div>
+
+<!-- Trigger Live Test Results -->
+{% if test_result %}
+<div class="alert {% if test_result.status == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show mb-4 shadow-sm" role="alert">
+    <div class="d-flex align-items-center">
+        {% if test_result.status == 'success' %}
+            <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+        {% else %}
+            <i class="bi bi-shield-x fs-4 me-2"></i>
+        {% endif %}
+        <div>
+            <strong>{% if test_result.status == 'success' %}Operation Allowed:{% else %}Trigger Interception (SIGNAL 45000):{% endif %}</strong>
+            <div>{{ test_result.message }}</div>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Interactive Trigger Testing Sandbox -->
+<div class="row g-4 mb-4">
+    <!-- Test Case 1: Marks Validation Trigger -->
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-primary"><i class="bi bi-lightning-charge-fill me-1"></i> Test 1: Marks Validation Trigger</span>
+                <span class="badge bg-danger">BEFORE INSERT</span>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Try inserting invalid marks (e.g., <strong>-5</strong> or <strong>120</strong> on an exam with max 50 marks). The MySQL trigger will intercept the query and throw an error using <code>SIGNAL SQLSTATE '45000'</code>!
+                </p>
+                <form method="POST" action="{{ url_for('triggers') }}">
+                    <input type="hidden" name="action" value="test_marks_trigger">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Exam (Max Marks in brackets):</label>
+                            <select class="form-select form-select-sm" name="exam_id" required>
+                                {% for ex in exams %}
+                                    <option value="{{ ex.exam_id }}">{{ ex.exam_name }} (Max: {{ ex.maximum_marks }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Student:</label>
+                            <select class="form-select form-select-sm" name="student_id" required>
+                                {% for s in students %}
+                                    <option value="{{ s.student_id }}">{{ s.roll_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Marks Obtained (Try invalid value > max marks):</label>
+                        <input type="number" step="0.5" class="form-control form-control-sm" name="marks_obtained" value="150" required>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="bi bi-play-circle me-1"></i> Fire Trigger Test (INSERT INTO results)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Case 2: Fee Payment Status Trigger -->
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-success"><i class="bi bi-lightning-charge-fill me-1"></i> Test 2: Fee Limit &amp; Status Trigger</span>
+                <span class="badge bg-warning text-dark">BEFORE INSERT</span>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Tests payment limit enforcement. If <code>paid_amount &gt; total_amount</code>, the trigger rejects the invoice. If valid, the trigger auto-assigns <strong>Pending</strong>, <strong>Partial</strong>, or <strong>Paid</strong>!
+                </p>
+                <form method="POST" action="{{ url_for('triggers') }}">
+                    <input type="hidden" name="action" value="test_fee_trigger">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Student:</label>
+                        <select class="form-select form-select-sm" name="student_id" required>
+                            {% for s in students %}
+                                <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Total Invoice Amount (₹):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" name="total_amount" value="5000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Paid Amount (Try &gt; 5000):</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" name="paid_amount" value="6500" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-warning text-dark w-100">
+                        <i class="bi bi-play-circle me-1"></i> Fire Fee Trigger Test (INSERT INTO fees)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Triggers Architectural Reference -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <span class="fw-bold"><i class="bi bi-code-slash me-2 text-primary"></i> Implemented Database Triggers Directory</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Trigger Name</th>
+                    <th>Table</th>
+                    <th>Timing &amp; Event</th>
+                    <th>Trigger Responsibilities &amp; Enforcement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>trg_validate_marks_insert</code></td>
+                    <td><code>results</code></td>
+                    <td><span class="badge bg-danger">BEFORE INSERT</span></td>
+                    <td>Blocks negative marks or marks exceeding maximum marks; computes grade letter.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_validate_marks_update</code></td>
+                    <td><code>results</code></td>
+                    <td><span class="badge bg-warning text-dark">BEFORE UPDATE</span></td>
+                    <td>Validates revised marks and synchronizes recalculated letter grade.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_validate_fees_insert</code></td>
+                    <td><code>fees</code></td>
+                    <td><span class="badge bg-danger">BEFORE INSERT</span></td>
+                    <td>Ensures paid &le; total amount; automatically assigns status ('Paid', 'Partial', 'Pending').</td>
+                </tr>
+                <tr>
+                    <td><code>trg_validate_fees_update</code></td>
+                    <td><code>fees</code></td>
+                    <td><span class="badge bg-warning text-dark">BEFORE UPDATE</span></td>
+                    <td>Validates payment updates and automatically updates payment status and timestamp.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_validate_attendance_insert</code></td>
+                    <td><code>attendance</code></td>
+                    <td><span class="badge bg-danger">BEFORE INSERT</span></td>
+                    <td>Prevents marking attendance for future dates.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_student_audit_insert</code></td>
+                    <td><code>students</code></td>
+                    <td><span class="badge bg-success">AFTER INSERT</span></td>
+                    <td>Inserts comprehensive enrollment record into <code>student_audit_log</code>.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_student_audit_update</code></td>
+                    <td><code>students</code></td>
+                    <td><span class="badge bg-info">AFTER UPDATE</span></td>
+                    <td>Logs old vs new attribute changes into <code>student_audit_log</code>.</td>
+                </tr>
+                <tr>
+                    <td><code>trg_student_audit_delete</code></td>
+                    <td><code>students</code></td>
+                    <td><span class="badge bg-secondary">AFTER DELETE</span></td>
+                    <td>Preserves audit trail of deleted student records with timestamp and actor.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Live Audit Log Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-text me-2 text-primary"></i> Live Audit Trail: <code>student_audit_log</code> ({{ audit_logs|length }} entries)</span>
+        <button class="btn btn-sm btn-outline-secondary py-0" onclick="location.reload();">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh Logs
+        </button>
+    </div>
+    <div class="table-responsive" style="max-height: 450px;">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light sticky-top">
+                <tr>
+                    <th>Log ID</th>
+                    <th>Student ID</th>
+                    <th>Action</th>
+                    <th>DB User</th>
+                    <th>Audit Change Summary</th>
+                    <th>Recorded Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in audit_logs %}
+                <tr>
+                    <td><code>#{{ log.log_id }}</code></td>
+                    <td><code>ID {{ log.student_id }}</code></td>
+                    <td>
+                        {% if log.action_type == 'INSERT' %}
+                            <span class="badge bg-success">INSERT</span>
+                        {% elif log.action_type == 'UPDATE' %}
+                            <span class="badge bg-warning text-dark">UPDATE</span>
+                        {% else %}
+                            <span class="badge bg-danger">DELETE</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ log.performed_by }}</small></td>
+                    <td class="small">{{ log.details }}</td>
+                    <td><small class="text-muted">{{ log.action_timestamp }}</small></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">No audit events recorded yet. Perform an edit or add a student to see the trigger fire!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

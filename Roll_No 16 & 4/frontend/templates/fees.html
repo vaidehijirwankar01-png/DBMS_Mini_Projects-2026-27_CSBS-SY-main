@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Fees — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Fee Management &amp; Accounts</h3>
+        <p class="text-muted small mb-0">Track tuition, hostel, and exam fees &bull; Status automatically set by Trigger <code>trg_validate_fees_insert</code></p>
+    </div>
+    {% if session.get('role') in ['Admin', 'Clerk'] %}
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFeeModal">
+        <i class="bi bi-cash me-1"></i> Record New Fee Invoice
+    </button>
+    {% endif %}
+</div>
+
+<!-- Trigger Notification Callout -->
+<div class="alert alert-success d-flex align-items-center mb-4 small" role="alert">
+    <i class="bi bi-shield-check me-2 fs-5"></i>
+    <div>
+        <strong>DBMS Trigger in Action:</strong> The triggers <code>trg_validate_fees_insert</code> and <code>trg_validate_fees_update</code> automatically prevent paid amounts from exceeding total invoice amounts, and automatically synchronize the <code>payment_status</code> column to <strong>Paid</strong>, <strong>Partial</strong>, or <strong>Pending</strong>.
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-credit-card-2-front-fill me-2 text-primary"></i> Fee Invoices ({{ fees|length }})</span>
+        <div style="width: 250px;">
+            <input type="text" class="form-control form-control-sm table-search-input" data-target-table="feeTable" placeholder="Filter fee invoices...">
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="feeTable">
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Fee Type</th>
+                    <th>Total Invoiced</th>
+                    <th>Amount Paid</th>
+                    <th>Outstanding</th>
+                    <th>Status</th>
+                    {% if session.get('role') in ['Admin', 'Clerk'] %}
+                    <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fees %}
+                <tr>
+                    <td><code>#{{ f.fee_id }}</code></td>
+                    <td><code>{{ f.roll_number }}</code></td>
+                    <td class="fw-semibold">{{ f.student_name }}</td>
+                    <td><small class="text-muted">{{ f.department_name }}</small></td>
+                    <td><span class="badge bg-light text-dark border">{{ f.fee_type }}</span></td>
+                    <td><strong>₹{{ "{:,.2f}".format(f.total_amount) }}</strong></td>
+                    <td class="text-success">₹{{ "{:,.2f}".format(f.paid_amount) }}</td>
+                    <td class="text-danger fw-semibold">₹{{ "{:,.2f}".format(f.pending_amount) }}</td>
+                    <td>
+                        {% if f.payment_status == 'Paid' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Paid</span>
+                        {% elif f.payment_status == 'Partial' %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Partial</span>
+                        {% else %}
+                            <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>Pending</span>
+                        {% endif %}
+                    </td>
+                    {% if session.get('role') in ['Admin', 'Clerk'] %}
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal" data-bs-target="#editFeeModal{{ f.fee_id }}" title="Update Payment">
+                            <i class="bi bi-cash-coin"></i>
+                        </button>
+                        {% if session.get('role') == 'Admin' %}
+                        <form method="POST" action="{{ url_for('delete_fee', fee_id=f.fee_id) }}" class="d-inline" onsubmit="return confirmDelete('fee invoice');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Invoice">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+
+                <!-- Edit Fee Modal -->
+                <div class="modal fade" id="editFeeModal{{ f.fee_id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST" action="{{ url_for('edit_fee', fee_id=f.fee_id) }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Record Payment: Invoice #{{ f.fee_id }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="small text-muted mb-3">
+                                        <strong>Student:</strong> {{ f.student_name }} ({{ f.roll_number }})<br>
+                                        <strong>Fee Type:</strong> {{ f.fee_type }}<br>
+                                        <strong>Total Assessment:</strong> ₹{{ f.total_amount }}
+                                    </p>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">New Cumulative Paid Amount (₹)</label>
+                                        <input type="number" step="0.01" class="form-control" name="paid_amount" value="{{ f.paid_amount }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Payment Date</label>
+                                        <input type="date" class="form-control" name="payment_date" value="{{ f.payment_date or '' }}">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update Payment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center py-4 text-muted">No fee records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Fee Modal -->
+<div class="modal fade" id="addFeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_fee') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generate Fee Invoice</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Student</label>
+                        <select class="form-select" name="student_id" required>
+                            {% for s in students %}
+                                <option value="{{ s.student_id }}">{{ s.roll_number }} — {{ s.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Fee Classification</label>
+                        <select class="form-select" name="fee_type" required>
+                            <option value="Tuition Fee">Tuition Fee</option>
+                            <option value="Hostel Fee">Hostel Fee</option>
+                            <option value="Library Fee">Library Fee</option>
+                            <option value="Exam Fee">Exam Fee</option>
+                            <option value="Laboratory Fee">Laboratory Fee</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Total Amount (₹)</label>
+                            <input type="number" step="0.01" class="form-control" name="total_amount" placeholder="e.g. 85000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Initial Paid Amount (₹)</label>
+                            <input type="number" step="0.01" class="form-control" name="paid_amount" value="0.00" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Payment Date (Optional)</label>
+                        <input type="date" class="form-control" name="payment_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Generate Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity HMS - Advanced Hospital Management System</title>
+    <meta name="description" content="Production-ready relational database management system mini project featuring 3NF normalization, stored procedures, triggers, and live MySQL integration.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav">
+            <div class="brand">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Antigravity Hospital Management System</h1>
+                    <span class="brand-sub">MySQL 26.7 InnoDB • 3NF Enterprise Architecture</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="db-status-pill" id="db-status-badge">
+                    <span class="pulsing-dot"></span>
+                    <span class="status-label">MySQL Connected</span>
+                </div>
+                <div class="system-time" id="system-time">--:--:--</div>
+                <button class="btn btn-secondary btn-sm" id="btn-reset-db" title="Re-run run_all.sql to restore clean demonstration records">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                        <path d="M8 16H3v5"/>
+                    </svg>
+                    Reset Demo DB
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Metrics Dashboard -->
+        <section class="kpi-banner">
+            <div class="kpi-card" id="kpi-doctors">
+                <div class="kpi-icon icon-blue">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Doctors</span>
+                    <h3 class="kpi-value" id="stat-doctors">-</h3>
+                    <span class="kpi-detail">Across 5 Specialized Depts</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" id="kpi-patients">
+                <div class="kpi-icon icon-emerald">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Registered Patients</span>
+                    <h3 class="kpi-value" id="stat-patients">-</h3>
+                    <span class="kpi-detail">Inpatients & Outpatients</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" id="kpi-appointments">
+                <div class="kpi-icon icon-violet">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Appointments Booked</span>
+                    <h3 class="kpi-value" id="stat-appointments">-</h3>
+                    <span class="kpi-detail">With collision protection</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" id="kpi-occupancy">
+                <div class="kpi-icon icon-amber">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M2 4v16"/>
+                        <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
+                        <path d="M2 17h20"/>
+                        <path d="M6 8v9"/>
+                    </svg>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Bed Occupancy Rate</span>
+                    <h3 class="kpi-value" id="stat-occupancy">-</h3>
+                    <span class="kpi-detail" id="stat-occupancy-sub">Calculating...</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" id="kpi-revenue">
+                <div class="kpi-icon icon-cyan">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Cardiology Revenue</span>
+                    <h3 class="kpi-value" id="stat-revenue">-</h3>
+                    <span class="kpi-detail">via <code>fn_get_department_total_revenue(1)</code></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-tabs">
+            <button class="tab-btn active" data-tab="tab-overview" id="nav-tab-overview">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Overview & Analytics
+            </button>
+            <button class="tab-btn" data-tab="tab-appointments" id="nav-tab-appointments">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Appointments Schedule
+            </button>
+            <button class="tab-btn" data-tab="tab-rooms" id="nav-tab-rooms">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
+                Room Inventory
+            </button>
+            <button class="tab-btn" data-tab="tab-doctors" id="nav-tab-doctors">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                Doctors & Departments
+            </button>
+            <button class="tab-btn" data-tab="tab-billing" id="nav-tab-billing">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                Patients & Billing Summary
+            </button>
+            <button class="tab-btn" data-tab="tab-audit" id="nav-tab-audit">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Trigger Audit Trail
+            </button>
+            <button class="tab-btn" data-tab="tab-viva" id="nav-tab-viva">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                Viva SQL Console
+            </button>
+        </nav>
+
+        <!-- Main Tab Contents -->
+        <main class="tab-content-area">
+            
+            <!-- TAB 1: OVERVIEW & ANALYTICS -->
+            <div class="tab-pane active" id="tab-overview">
+                <div class="grid-2-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Hospital Department Overview</h2>
+                                <p class="card-subtitle">Division heads, floor locations, and staff distribution</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-overview-depts">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Department</th>
+                                        <th>Floor</th>
+                                        <th>Head of Department (HOD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody><tr><td colspan="4" class="text-center">Loading departments...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Interactive Quick Actions</h2>
+                                <p class="card-subtitle">Execute advanced stored procedures with validation</p>
+                            </div>
+                        </div>
+                        <div class="quick-actions-panel">
+                            <div class="action-tile" id="tile-book-appointment">
+                                <div class="action-icon icon-violet">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Schedule Appointment</h4>
+                                    <p>Invokes <code>sp_schedule_appointment</code> with automated slot conflict prevention</p>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="btn-open-booking-modal">Book Now</button>
+                            </div>
+
+                            <div class="action-tile" id="tile-assign-room">
+                                <div class="action-icon icon-amber">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Assign Inpatient Bed</h4>
+                                    <p>Invokes <code>sp_assign_room</code> to atomically update patient and room status</p>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="btn-open-assign-modal">Assign Bed</button>
+                            </div>
+
+                            <div class="action-tile" id="tile-trigger-test">
+                                <div class="action-icon icon-emerald">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Test Payment Trigger</h4>
+                                    <p>Settle pending bill #5 to fire <code>trg_after_bill_payment_update</code></p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm" id="btn-quick-trigger-test">Fire Trigger</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: APPOINTMENTS -->
+            <div class="tab-pane" id="tab-appointments">
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2 class="card-title">Outpatient Consultations Schedule</h2>
+                            <p class="card-subtitle">Live multi-table join view: <code>v_appointment_overview</code></p>
+                        </div>
+                        <button class="btn btn-primary" id="btn-modal-schedule">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            New Appointment
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="table-appointments">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Patient Phone</th>
+                                    <th>Assigned Doctor</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody><tr><td colspan="8" class="text-center">Loading appointments...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ROOM INVENTORY -->
+            <div class="tab-pane" id="tab-rooms">
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2 class="card-title">Inpatient Bed Matrix & Occupancy</h2>
+                            <p class="card-subtitle">Real-time room availability tracking across General, Semi-Private, Private, and ICU wards</p>
+                        </div>
+                        <button class="btn btn-primary" id="btn-modal-assign-room">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                            Assign Room to Patient
+                        </button>
+                    </div>
+                    <div class="room-grid" id="room-cards-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: DOCTORS -->
+            <div class="tab-pane" id="tab-doctors">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Medical Staff Directory</h2>
+                            <p class="card-subtitle">Physicians, specializations, compensation, and department allocations</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="table-doctors">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Doctor Name</th>
+                                    <th>Specialization</th>
+                                    <th>Department</th>
+                                    <th>Phone</th>
+                                    <th>Experience</th>
+                                    <th>Monthly Salary</th>
+                                </tr>
+                            </thead>
+                            <tbody><tr><td colspan="7" class="text-center">Loading doctors...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: PATIENTS & BILLING -->
+            <div class="tab-pane" id="tab-billing">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Patient Admissions & Billing Registry</h2>
+                            <p class="card-subtitle">Joined view: <code>v_patient_billing_summary</code> with one-click payment settlement</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="table-billing">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Patient Name</th>
+                                    <th>Contact</th>
+                                    <th>Room No</th>
+                                    <th>Room Type</th>
+                                    <th>Daily Charges</th>
+                                    <th>Bill Amount</th>
+                                    <th>Payment Mode</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody><tr><td colspan="10" class="text-center">Loading billing records...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: AUDIT LOG -->
+            <div class="tab-pane" id="tab-audit">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Automated Trigger Audit Trail</h2>
+                            <p class="card-subtitle">Audit entries autonomously captured by <code>trg_after_bill_payment_update</code></p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="table-audit">
+                            <thead>
+                                <tr>
+                                    <th>Log ID</th>
+                                    <th>Target Table</th>
+                                    <th>Action Type</th>
+                                    <th>Record ID</th>
+                                    <th>Change Details</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody><tr><td colspan="6" class="text-center">Loading audit log...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: VIVA SQL CONSOLE -->
+            <div class="tab-pane" id="tab-viva">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Live Viva Voce SQL Query Console</h2>
+                            <p class="card-subtitle">Execute custom queries or select from pre-configured examiner verification tests</p>
+                        </div>
+                    </div>
+
+                    <div class="viva-preset-bar">
+                        <span class="preset-label">Pre-configured Viva Tests:</span>
+                        <button class="btn btn-sm btn-outline preset-btn" data-sql="SELECT * FROM v_appointment_overview LIMIT 10;">1. Appointment View</button>
+                        <button class="btn btn-sm btn-outline preset-btn" data-sql="CALL sp_schedule_appointment(1, 1, '2026-10-21', '12:00:00', @msg); SELECT @msg AS collision_result;">2. Collision Check (Error)</button>
+                        <button class="btn btn-sm btn-outline preset-btn" data-sql="SELECT d.department_name, fn_get_department_total_revenue(d.department_id) AS total_revenue FROM department d;">3. Dept Revenue Function</button>
+                        <button class="btn btn-sm btn-outline preset-btn" data-sql="SELECT room_type, COUNT(*) AS total, SUM(CASE WHEN availability = 'Occupied' THEN 1 ELSE 0 END) AS occupied FROM room GROUP BY room_type;">4. Room Occupancy Aggregation</button>
+                        <button class="btn btn-sm btn-outline preset-btn" data-sql="SELECT * FROM audit_log ORDER BY log_id DESC;">5. Audit Log Records</button>
+                    </div>
+
+                    <div class="sql-editor-container">
+                        <textarea id="sql-query-input" rows="4" placeholder="Enter any valid SQL query here (e.g. SELECT * FROM doctor;)"></textarea>
+                        <div class="sql-editor-actions">
+                            <button class="btn btn-primary" id="btn-run-sql">
+                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Execute Query
+                            </button>
+                            <span class="query-timer" id="query-exec-time"></span>
+                        </div>
+                    </div>
+
+                    <div class="query-result-wrapper" id="query-result-box">
+                        <div class="empty-state">Execute a query above to view the tabular result set here.</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL: SCHEDULE APPOINTMENT -->
+    <div class="modal-overlay" id="modal-schedule">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Schedule New Appointment</h3>
+                <button class="btn-close" id="btn-close-schedule">&times;</button>
+            </div>
+            <form id="form-schedule" class="modal-form">
+                <div class="form-group">
+                    <label for="sched-patient">Select Patient *</label>
+                    <select id="sched-patient" required>
+                        <option value="">Select a patient...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sched-doctor">Select Doctor *</label>
+                    <select id="sched-doctor" required>
+                        <option value="">Select a doctor...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sched-date">Appointment Date *</label>
+                        <input type="date" id="sched-date" required value="2026-10-31">
+                    </div>
+                    <div class="form-group">
+                        <label for="sched-time">Time Slot *</label>
+                        <input type="time" id="sched-time" required value="10:00:00">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-schedule">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Book Consultation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ASSIGN ROOM -->
+    <div class="modal-overlay" id="modal-assign">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Assign Inpatient Bed</h3>
+                <button class="btn-close" id="btn-close-assign">&times;</button>
+            </div>
+            <form id="form-assign" class="modal-form">
+                <div class="form-group">
+                    <label for="assign-patient">Select Patient *</label>
+                    <select id="assign-patient" required>
+                        <option value="">Select a patient without a bed...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assign-room">Select Available Room *</label>
+                    <select id="assign-room" required>
+                        <option value="">Select an available room...</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-assign">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Bed</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

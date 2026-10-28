@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Management - Retail Store Management System{% endblock %}
+{% block page_title %}Employee Management{% endblock %}
+{% block page_subtitle %}Manage store employees, assigned roles, and billing authorization{% endblock %}
+
+{% block content %}
+<!-- Search and Action Bar Card -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <div class="row g-2 align-items-center justify-content-between">
+      <!-- Search Form -->
+      <div class="col-12 col-md-7">
+        <form method="GET" action="{{ url_for('employees') }}" class="d-flex gap-2">
+          <div class="input-group">
+            <span class="input-group-text bg-white text-muted border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" 
+                   name="q" 
+                   class="form-control border-start-0" 
+                   placeholder="Search employee by name, role, phone, or ID..." 
+                   value="{{ search_query }}">
+          </div>
+          <button type="submit" class="btn btn-primary px-3">
+            <i class="bi bi-funnel me-1"></i> Search
+          </button>
+          {% if search_query %}
+            <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary" title="Clear Search">
+              <i class="bi bi-x-lg"></i>
+            </a>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- Add Employee Button -->
+      <div class="col-12 col-md-auto text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+          <i class="bi bi-person-plus me-1"></i> Add New Employee
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Search Notice -->
+{% if search_query %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="small text-muted">
+    Showing results for: <strong>"{{ search_query }}"</strong> &bull; <strong>{{ employees | length }}</strong> employee(s) found
+  </div>
+  <a href="{{ url_for('employees') }}" class="btn btn-link btn-sm text-decoration-none p-0">Clear filter</a>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Employees Table Card -->
+  <div class="col-12 col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div class="content-card-title">
+          <i class="bi bi-person-badge text-primary"></i>
+          <span>Store Staff ({{ employees | length }} Total)</span>
+        </div>
+        <span class="badge bg-secondary rounded-pill px-3 py-2">
+          Table: employee
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table custom-table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 70px;">ID</th>
+              <th>Employee Name</th>
+              <th>Designation / Role</th>
+              <th>Contact Phone</th>
+              <th>Sales Processed</th>
+              <th style="width: 140px;" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for emp in employees %}
+            <tr>
+              <!-- Employee ID -->
+              <td class="font-monospace fw-bold text-muted">#{{ emp.employee_id }}</td>
+
+              <!-- Employee Name -->
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                    {{ emp.employee_name[0]|upper }}
+                  </div>
+                  <div class="fw-semibold text-dark fs-6">{{ emp.employee_name }}</div>
+                </div>
+              </td>
+
+              <!-- Role Badge -->
+              <td>
+                <span class="badge {{ 'bg-primary-subtle text-primary border border-primary-subtle' if emp.role == 'Manager' else 'bg-info-subtle text-info-emphasis border border-info-subtle' }} px-2.5 py-1">
+                  <i class="bi {{ 'bi-shield-check' if emp.role == 'Manager' else 'bi-cash-coin' }} me-1"></i>{{ emp.role }}
+                </span>
+              </td>
+
+              <!-- Phone -->
+              <td>
+                {% if emp.phone %}
+                  <a href="tel:{{ emp.phone }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-telephone text-muted me-1"></i>{{ emp.phone }}
+                  </a>
+                {% else %}
+                  <span class="text-muted small">N/A</span>
+                {% endif %}
+              </td>
+
+              <!-- Sales Processed -->
+              <td>
+                <span class="badge bg-light text-dark border">
+                  {{ emp.sales_handled }} sales
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('edit_employee', employee_id=emp.employee_id) }}" 
+                     class="btn btn-outline-primary" 
+                     data-bs-toggle="tooltip" 
+                     title="Edit Employee">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                  <button type="button" 
+                          class="btn btn-outline-danger delete-emp-btn" 
+                          data-id="{{ emp.employee_id }}" 
+                          data-name="{{ emp.employee_name }}"
+                          data-count="{{ emp.sales_handled }}"
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteEmployeeModal"
+                          title="Delete Employee">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-person-x text-secondary fs-1 d-block mb-2"></i>
+                <h6 class="fw-bold text-dark">No Employees Found</h6>
+                {% if search_query %}
+                  <p class="small mb-2">No employee matches "{{ search_query }}".</p>
+                  <a href="{{ url_for('employees') }}" class="btn btn-outline-primary btn-sm">Clear Search</a>
+                {% else %}
+                  <p class="small mb-2">The employee table is currently empty.</p>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    <i class="bi bi-person-plus me-1"></i> Add First Employee
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Hierarchy & Foreign Key Card -->
+  <div class="col-12 col-lg-4">
+    <div class="content-card">
+      <div class="content-card-header">
+        <div class="content-card-title">
+          <i class="bi bi-diagram-3 text-primary"></i>
+          <span>Relational Foreign Key Info</span>
+        </div>
+      </div>
+      <div class="content-card-body">
+        <p class="text-muted small">
+          In this relational DBMS, <code>employee</code> maintains a <strong>One-to-Many</strong> relationship with billing records in <code>sale</code>.
+        </p>
+
+        <div class="p-3 bg-light rounded border mb-3">
+          <div class="small fw-bold text-dark mb-1">Foreign Key Constraint:</div>
+          <div class="font-monospace small text-primary">
+            sale.employee_id &rarr; employee.employee_id
+          </div>
+          <div class="small text-secondary mt-1">Constraint: <code>sale_ibfk_2</code></div>
+        </div>
+
+        <div class="alert alert-info py-2 px-3 small border-0 mb-3">
+          <i class="bi bi-info-circle-fill text-primary me-1"></i>
+          <strong>Integrity Protection:</strong> Employees who have billed sales transactions cannot be deleted to preserve financial audit trails.
+        </div>
+
+        <ul class="list-unstyled small text-muted mb-0">
+          <li class="mb-1"><i class="bi bi-check2 text-success me-1"></i>Primary Key: <code>employee_id (INT)</code></li>
+          <li class="mb-1"><i class="bi bi-check2 text-success me-1"></i>Name: <code>employee_name (VARCHAR 100)</code></li>
+          <li class="mb-1"><i class="bi bi-check2 text-success me-1"></i>Role: <code>role (VARCHAR 50)</code></li>
+          <li><i class="bi bi-check2 text-success me-1"></i>Phone: <code>phone (VARCHAR 15)</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     ADD EMPLOYEE MODAL
+     ========================================================= -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="addEmployeeModalLabel">
+          <i class="bi bi-person-plus me-1"></i> Add New Employee
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('add_employee') }}">
+        <div class="modal-body p-4">
+          <!-- Employee Name -->
+          <div class="mb-3">
+            <label for="employee_name" class="form-label fw-semibold">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="employee_name" 
+                   name="employee_name" 
+                   placeholder="e.g. Vikram Verma" 
+                   maxlength="100" 
+                   required>
+            <div class="form-text">Maximum 100 characters.</div>
+          </div>
+
+          <!-- Role -->
+          <div class="mb-3">
+            <label for="role" class="form-label fw-semibold">
+              Role / Designation <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="" disabled selected>-- Select Store Role --</option>
+              <option value="Manager">Manager</option>
+              <option value="Cashier">Cashier</option>
+              <option value="Inventory Clerk">Inventory Clerk</option>
+              <option value="Sales Associate">Sales Associate</option>
+            </select>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="mb-3">
+            <label for="phone" class="form-label fw-semibold">Contact Phone</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+              <input type="tel" 
+                     class="form-control" 
+                     id="phone" 
+                     name="phone" 
+                     placeholder="e.g. 9876500003" 
+                     maxlength="15">
+            </div>
+            <div class="form-text">Internal staff contact number.</div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> Save Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     DELETE EMPLOYEE CONFIRMATION MODAL
+     ========================================================= -->
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold" id="deleteEmployeeModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> Confirm Delete Employee
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="p-3 bg-light rounded border mb-3">
+          <div>Employee ID: <strong id="deleteEmployeeId">#</strong></div>
+          <div>Employee Name: <strong id="deleteEmployeeName" class="text-danger"></strong></div>
+          <div>Sales Processed: <strong id="deleteEmployeeCount">0</strong></div>
+        </div>
+
+        <div id="deleteEmployeeWarningAlert" class="alert alert-warning small d-none">
+          <i class="bi bi-shield-lock-fill text-warning me-1"></i>
+          <strong>Audit &amp; Integrity Warning:</strong> This employee has billed <span id="warningEmployeeSalesCount">0</span> transaction(s). 
+          Deletion will be blocked by MySQL foreign-key rules.
+        </div>
+
+        <p class="small text-muted mb-0">
+          Staff with processed billing cannot be removed from database audit records.
+        </p>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteEmployeeForm" method="POST" action="">
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-trash3 me-1"></i> Confirm Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dynamic Modal Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-emp-btn');
+    const deleteIdSpan = document.getElementById('deleteEmployeeId');
+    const deleteNameSpan = document.getElementById('deleteEmployeeName');
+    const deleteCountSpan = document.getElementById('deleteEmployeeCount');
+    const warningAlert = document.getElementById('deleteEmployeeWarningAlert');
+    const warningSalesCount = document.getElementById('warningEmployeeSalesCount');
+    const deleteForm = document.getElementById('deleteEmployeeForm');
+
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const empId = this.getAttribute('data-id');
+        const empName = this.getAttribute('data-name');
+        const salesCount = parseInt(this.getAttribute('data-count') || '0', 10);
+        
+        deleteIdSpan.textContent = '#' + empId;
+        deleteNameSpan.textContent = empName;
+        deleteCountSpan.textContent = salesCount + ' sale(s)';
+        deleteForm.action = '/employees/delete/' + empId;
+
+        if (salesCount > 0) {
+          warningAlert.classList.remove('d-none');
+          warningSalesCount.textContent = salesCount;
+        } else {
+          warningAlert.classList.add('d-none');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

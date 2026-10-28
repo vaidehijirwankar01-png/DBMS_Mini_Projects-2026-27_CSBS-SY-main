@@ -1,0 +1,20 @@
+{
+  "name": "warehouse-logistics-management-system",
+  "version": "1.0.0",
+  "description": "Complete Warehouse and Logistics Management System with MySQL, Node.js Express, and React",
+  "scripts": {
+    "setup:db": "node backend/scripts/setup_db.js",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev"
+  },
+  "keywords": [
+    "dbms",
+    "mysql",
+    "warehouse",
+    "logistics",
+    "express",
+    "react"
+  ],
+  "author": "Ayush",
+  "license": "ISC"
+}

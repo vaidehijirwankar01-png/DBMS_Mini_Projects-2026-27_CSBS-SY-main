@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Cursor Report — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">MySQL Cursor Demonstration: <code>GenerateDepartmentReport</code></h3>
+        <p class="text-muted small mb-0">Demonstrates <code>DECLARE CURSOR</code>, <code>OPEN</code>, <code>FETCH</code>, <code>NOT FOUND</code> handler, and <code>CLOSE</code></p>
+    </div>
+    <form method="POST" action="{{ url_for('cursor_demo') }}">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-play-circle-fill me-1"></i> Run Cursor Procedure Live
+        </button>
+    </form>
+</div>
+
+<!-- Cursor Lifecycle Educational Flow -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <span class="fw-bold"><i class="bi bi-diagram-2-fill me-2 text-primary"></i> MySQL Cursor Execution Lifecycle</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 text-center">
+            <div class="col-md">
+                <div class="p-3 bg-light rounded-3 border">
+                    <span class="badge bg-secondary mb-2">Step 1</span>
+                    <h6 class="fw-bold text-dark mb-1">DECLARE CURSOR</h6>
+                    <small class="text-muted">Declares cursor for department rows &amp; sets NOT FOUND handler</small>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="p-3 bg-light rounded-3 border">
+                    <span class="badge bg-primary mb-2">Step 2</span>
+                    <h6 class="fw-bold text-dark mb-1">OPEN CURSOR</h6>
+                    <small class="text-muted">Initializes cursor and executes query to populate result buffer</small>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="p-3 bg-light rounded-3 border">
+                    <span class="badge bg-warning text-dark mb-2">Step 3</span>
+                    <h6 class="fw-bold text-dark mb-1">FETCH &amp; LOOP</h6>
+                    <small class="text-muted">Fetches each department row, computes counts &amp; financial aggregates</small>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="p-3 bg-light rounded-3 border">
+                    <span class="badge bg-info mb-2">Step 4</span>
+                    <h6 class="fw-bold text-dark mb-1">INSERT SUMMARY</h6>
+                    <small class="text-muted">Appends aggregated analytics into <code>department_summary</code></small>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="p-3 bg-light rounded-3 border">
+                    <span class="badge bg-success mb-2">Step 5</span>
+                    <h6 class="fw-bold text-dark mb-1">CLOSE CURSOR</h6>
+                    <small class="text-muted">Closes cursor and frees server memory allocations</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Output Table from department_summary -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2 text-primary"></i> Cursor Output Table: <code>department_summary</code> ({{ cursor_output|length }} Departments)</span>
+        <button class="btn btn-xs btn-outline-secondary py-0" onclick="copySql('cursorWorkbenchSql');" style="font-size: 0.8rem;">
+            <i class="bi bi-clipboard me-1"></i> Copy Workbench Script
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Summary ID</th>
+                    <th>Department Name</th>
+                    <th>Students Count</th>
+                    <th>Faculty Count</th>
+                    <th>Courses Count</th>
+                    <th>Fee Collected</th>
+                    <th>Fee Pending</th>
+                    <th>Generated At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in cursor_output %}
+                <tr>
+                    <td><code>#{{ row.summary_id }}</code></td>
+                    <td class="fw-bold text-primary">{{ row.department_name }}</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ row.total_students }} Students</span></td>
+                    <td><span class="badge bg-info bg-opacity-10 text-info">{{ row.total_faculty }} Faculty</span></td>
+                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ row.total_courses }} Courses</span></td>
+                    <td class="text-success fw-semibold">₹{{ "{:,.2f}".format(row.total_fee_collected) }}</td>
+                    <td class="text-danger fw-semibold">₹{{ "{:,.2f}".format(row.total_fee_pending) }}</td>
+                    <td><small class="text-muted">{{ row.generated_at }}</small></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        No summary records generated yet. Click <strong>"Run Cursor Procedure Live"</strong> above to populate this table!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MySQL Workbench Command Reference -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white">
+        <span class="fw-bold"><i class="bi bi-terminal me-2 text-primary"></i> Execute in MySQL Workbench</span>
+    </div>
+    <div class="card-body">
+        <pre class="sql-box mb-0" id="cursorWorkbenchSql"><code>-- Execute cursor procedure in MySQL Workbench:
+USE college_management;
+CALL GenerateDepartmentReport();
+
+-- Inspect generated summary table:
+SELECT * FROM department_summary;</code></pre>
+    </div>
+</div>
+{% endblock %}

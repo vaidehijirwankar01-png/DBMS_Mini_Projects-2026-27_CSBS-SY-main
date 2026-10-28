@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Circulation Desk{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Circulation Desk</h1>
+    <p class="page-subtitle">Demonstrating ACID Transactions (Atomicity, Consistency, Isolation, Durability) &amp; Automated Triggers</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;align-items:start;">
+  <!-- Issue Book Form (ACID Transaction) -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">📖 Issue Book (Transaction)</h3>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info" style="font-size:0.8rem;padding:0.75rem;margin-bottom:1.25rem;">
+        ⚡ <strong>Transactional Check:</strong> Ensures member is active, has not exceeded quota, and book has copies available before committing.
+      </div>
+
+      <form action="{{ url_for('issue_book_route') }}" method="POST">
+        <div class="form-group">
+          <label for="member_id">Select Member *</label>
+          <select id="member_id" name="member_id" required>
+            <option value="" disabled selected>-- Select Registered Member --</option>
+            {% for m in members %}
+              <option value="{{ m.member_id }}">
+                #{{ m.member_id }} - {{ m.first_name }} {{ m.last_name }} ({{ m.membership_type }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="book_id">Select Book *</label>
+          <select id="book_id" name="book_id" required>
+            <option value="" disabled selected>-- Select Book Title --</option>
+            {% for b in available_books %}
+              <option value="{{ b.book_id }}" {% if selected_book_id == b.book_id %}selected{% endif %}>
+                {{ b.title }} ({{ b.available_copies }} in stock)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="days">Loan Period (Days)</label>
+          <select id="days" name="days">
+            <option value="7">7 Days (Standard Quick)</option>
+            <option value="14" selected>14 Days (Standard Two Weeks)</option>
+            <option value="30">30 Days (Faculty / Research)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">Execute Issue Transaction</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Loans List -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Active Borrowings in Circulation</h3>
+      <div style="flex:1;max-width:260px;margin-left:auto;">
+        <input type="text" id="loanSearch" placeholder="🔍 Filter active loans..." onkeyup="filterTable('loanSearch', 'loansTable')">
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table id="loansTable">
+        <thead>
+          <tr>
+            <th>Loan ID</th>
+            <th>Book Title</th>
+            <th>Borrower</th>
+            <th>Due Date</th>
+            <th>Overdue Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loan in active_loans %}
+          <tr>
+            <td><strong>#{{ loan.loan_id }}</strong></td>
+            <td>
+              <a href="{{ url_for('book_detail', book_id=loan.book_id) }}" style="color:var(--primary);text-decoration:none;font-weight:600;">
+                {{ loan.book_title }}
+              </a>
+              <div style="font-size:0.75rem;color:var(--text-muted);">Issued: {{ loan.issue_date }}</div>
+            </td>
+            <td>
+              <strong>{{ loan.member_name }}</strong>
+              <div style="font-size:0.75rem;color:var(--text-muted);">{{ loan.member_email }}</div>
+            </td>
+            <td><strong>{{ loan.due_date }}</strong></td>
+            <td>
+              {% if loan.days_overdue > 0 %}
+                <span class="badge badge-danger">
+                  ⚠️ Overdue by {{ loan.days_overdue }} days (Fine ~ ${{ "%.2f"|format(loan.days_overdue * 5.0) }})
+                </span>
+              {% else %}
+                <span class="badge badge-success">On Time</span>
+              {% endif %}
+            </td>
+            <td>
+              <form action="{{ url_for('return_book_route', loan_id=loan.loan_id) }}" method="POST" onsubmit="return confirm('Confirm book return for {{ loan.book_title }}?');">
+                <button type="submit" class="btn btn-secondary btn-sm">Process Return</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No active loans found. All books are accounted for in stock.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

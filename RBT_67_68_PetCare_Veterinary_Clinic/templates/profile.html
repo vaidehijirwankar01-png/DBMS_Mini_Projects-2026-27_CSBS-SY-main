@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<a class="lnk" href="{{ back }}">← Back to {{ back[1:] }}</a>
+<div class="card hero"><div class="avatar">{{ initials }}</div>
+  <div><span class="kind">{{ kind }} profile</span><h1>{{ name }}</h1></div></div>
+<div class="infogrid">{% for k, v in info %}<div class="card mini-card"><small>{{ k }}</small><b>{{ v if v is not none else '—' }}</b></div>{% endfor %}</div>
+{% for title, rows, link in sections %}
+<div class="card tbl sect"><div class="chh pad"><h3>{{ title }}</h3><span class="mut">{{ rows|length }} item{{ '' if rows|length == 1 else 's' }}</span></div>
+{% if rows %}<table><thead><tr>{% for c in rows[0].keys() %}<th>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr>{% for c, v in r.items() %}<td>{% if v in ['Scheduled', 'Completed', 'Cancelled', 'Paid', 'Unpaid'] %}<span class="badge {{ v|lower }}">{{ v }}</span>
+{% elif link and c == 'Pet' %}<a class="lnk" href="{{ link }}{{ r['ID'] }}">{{ v }}</a>{% else %}{{ v if v is not none else '—' }}{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
+{% else %}<p class="empty">Nothing recorded yet</p>{% endif %}</div>
+{% endfor %}
+{% endblock %}

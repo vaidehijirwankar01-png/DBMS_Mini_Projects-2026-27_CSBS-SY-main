@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}DBMS Demonstration Hub - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="badge bg-warning text-dark px-3 py-1 mb-2 fw-semibold">Faculty / Evaluator Showcase</span>
+        <h3 class="fw-bold mb-1">DBMS Concepts Demonstration Hub</h3>
+        <p class="text-muted small mb-0">Live interactive showcase of normalization, advanced SQL queries, relational views, stored procedures, and triggers</p>
+    </div>
+</div>
+
+<!-- Database Physical Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+            <small class="text-muted text-uppercase fw-semibold">Users Table</small>
+            <h4 class="fw-bold text-dark my-1">{{ demo.db_stats.users_count }} rows</h4>
+            <span class="badge bg-light text-secondary border">users</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+            <small class="text-muted text-uppercase fw-semibold">Requests Table</small>
+            <h4 class="fw-bold text-primary my-1">{{ demo.db_stats.requests_count }} rows</h4>
+            <span class="badge bg-light text-secondary border">collection_requests</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+            <small class="text-muted text-uppercase fw-semibold">Workers Table</small>
+            <h4 class="fw-bold text-info my-1">{{ demo.db_stats.workers_count }} rows</h4>
+            <span class="badge bg-light text-secondary border">workers</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+            <small class="text-muted text-uppercase fw-semibold">Status History Table</small>
+            <h4 class="fw-bold text-success my-1">{{ demo.db_stats.history_count }} rows</h4>
+            <span class="badge bg-light text-secondary border">status_history</span>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs for DBMS Concepts -->
+<ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-sm" id="dbmsTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active fw-semibold" id="queries-tab" data-bs-toggle="tab" data-bs-target="#tab-queries" type="button">
+            <i class="bi bi-code-slash me-1"></i> 1. Live SQL Queries
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="views-tab" data-bs-toggle="tab" data-bs-target="#tab-views" type="button">
+            <i class="bi bi-table me-1"></i> 2. Relational Views
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="procedures-tab" data-bs-toggle="tab" data-bs-target="#tab-procedures" type="button">
+            <i class="bi bi-gear-wide-connected me-1"></i> 3. Stored Procedures
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="triggers-tab" data-bs-toggle="tab" data-bs-target="#tab-triggers" type="button">
+            <i class="bi bi-lightning-charge me-1"></i> 4. Triggers
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" id="erd-tab" data-bs-toggle="tab" data-bs-target="#tab-erd" type="button">
+            <i class="bi bi-diagram-3 me-1"></i> 5. ER Diagram
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Tab 1: Live SQL Queries -->
+    <div class="tab-pane fade show active" id="tab-queries">
+        {% for q in demo.queries %}
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-4 mb-4">
+            <h5 class="fw-bold text-success mb-1">{{ q.title }}</h5>
+            <p class="text-secondary small mb-3">{{ q.description }}</p>
+            
+            <div class="bg-dark text-light p-3 rounded-3 mb-3">
+                <pre class="mb-0"><code class="text-warning">{{ q.sql }}</code></pre>
+            </div>
+
+            <h6 class="fw-semibold text-dark small text-uppercase mb-2">Live Query Execution Result:</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            {% if q.results and q.results|length > 0 %}
+                                {% for col in q.results[0].keys() %}
+                                    <th class="small">{{ col }}</th>
+                                {% endfor %}
+                            {% else %}
+                                <th>Result</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in q.results %}
+                        <tr>
+                            {% for val in r.values() %}
+                                <td class="small">{{ val }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% else %}
+                        <tr><td class="text-center text-muted small py-2">No rows returned.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tab 2: Relational Views -->
+    <div class="tab-pane fade" id="tab-views">
+        {% for v in demo.views %}
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold text-primary mb-0"><code>{{ v.name }}</code></h5>
+                <span class="badge bg-primary-subtle text-primary">MySQL VIEW</span>
+            </div>
+            <p class="text-muted small mb-3">{{ v.description }}</p>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            {% if v.results and v.results|length > 0 %}
+                                {% for col in v.results[0].keys() %}
+                                    <th class="small">{{ col }}</th>
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in v.results %}
+                        <tr>
+                            {% for val in r.values() %}
+                                <td class="small">{{ val }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% else %}
+                        <tr><td class="text-center text-muted small py-2">View exists in schema; no rows to show.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tab 3: Stored Procedures -->
+    <div class="tab-pane fade" id="tab-procedures">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-4 mb-3">
+            <h5 class="fw-bold text-dark">Implemented Stored Procedures</h5>
+            <p class="text-muted small mb-3">Stored procedures enforce transactional boundaries, parameter checking, and business logic execution within the database engine.</p>
+            
+            <div class="accordion" id="procAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#proc1">
+                            sp_create_collection_request (Transactional Request Ingestion)
+                        </button>
+                    </h2>
+                    <div id="proc1" class="accordion-collapse collapse show">
+                        <div class="accordion-body bg-light">
+                            <p class="small text-muted mb-2">Validates citizen ID, category existence, ensures preferred date is not in the past, creates request, and writes initial audit row in <code>collection_status_history</code>.</p>
+                            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>CALL sp_create_collection_request(p_citizen_id, p_category_id, p_area_id, p_est_quantity, p_address, p_pref_date, p_notes, @out_req_id);</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#proc2">
+                            sp_assign_worker (Atomic Worker Dispatch)
+                        </button>
+                    </h2>
+                    <div id="proc2" class="accordion-collapse collapse">
+                        <div class="accordion-body bg-light">
+                            <p class="small text-muted mb-2">Atomically verifies request is 'Pending', verifies worker availability is 'Available', sets row locks (FOR UPDATE), inserts into assignments, transitions request to 'Assigned', and updates worker availability to 'Busy'.</p>
+                            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>CALL sp_assign_worker(p_request_id, p_worker_id, p_admin_id);</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#proc3">
+                            sp_update_collection_status (State Machine Verification)
+                        </button>
+                    </h2>
+                    <div id="proc3" class="accordion-collapse collapse">
+                        <div class="accordion-body bg-light">
+                            <p class="small text-muted mb-2">Enforces valid state transition lifecycle (Pending &rarr; Assigned &rarr; In Progress &rarr; Collected &rarr; Completed), manages measured weight inputs, and releases sanitation workers when completed.</p>
+                            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>CALL sp_update_collection_status(p_request_id, p_new_status, p_user_id, p_actual_qty, p_remarks);</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Triggers -->
+    <div class="tab-pane fade" id="tab-triggers">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-4">
+            <h5 class="fw-bold text-dark mb-1">Database Triggers & Business Rules</h5>
+            <p class="text-muted small mb-4">Event-driven routines automatically executed in response to database modifications.</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <span class="badge bg-success mb-2">BEFORE INSERT</span>
+                        <h6 class="fw-bold">trg_before_request_insert</h6>
+                        <p class="small text-muted mb-2">Fires on <code>collection_requests</code> table. Enforces that citizens cannot submit pickup dates scheduled in the past.</p>
+                        <code class="small text-dark">IF NEW.preferred_date &lt; CURDATE() THEN SIGNAL SQLSTATE '45000'...</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <span class="badge bg-primary mb-2">AFTER UPDATE</span>
+                        <h6 class="fw-bold">trg_after_status_change</h6>
+                        <p class="small text-muted mb-2">Fires on <code>collection_requests</code> table. Automatically appends audit tracking entries into <code>collection_status_history</code> whenever status column is changed.</p>
+                        <code class="small text-dark">INSERT INTO collection_status_history VALUES (NEW.request_id, OLD.status, NEW.status...);</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <span class="badge bg-info text-dark mb-2">AFTER UPDATE</span>
+                        <h6 class="fw-bold">trg_after_assignment_complete</h6>
+                        <p class="small text-muted mb-2">Fires on <code>assignments</code> table. When an assignment transitions to Completed, automatically increments the worker's lifetime counter.</p>
+                        <code class="small text-dark">UPDATE workers SET total_collections = total_collections + 1...</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <span class="badge bg-warning text-dark mb-2">BEFORE UPDATE</span>
+                        <h6 class="fw-bold">trg_before_request_update</h6>
+                        <p class="small text-muted mb-2">Fires on <code>collection_requests</code> table. Automatically stamps <code>completed_at = NOW()</code> when status becomes Completed.</p>
+                        <code class="small text-dark">IF NEW.status = 'Completed' THEN SET NEW.completed_at = NOW();</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: ER Diagram -->
+    <div class="tab-pane fade" id="tab-erd">
+        <div class="card border-0 shadow-sm rounded-3 bg-white p-4">
+            <h5 class="fw-bold text-dark mb-2">Relational Entity-Relationship Diagram (10 Entities)</h5>
+            <p class="text-muted small mb-3">Rendered relational schema diagram with primary keys, foreign key references, and relationship cardinalities.</p>
+            
+            <div class="p-3 bg-light rounded-3 border">
+                <pre class="small text-secondary mb-0" style="max-height: 450px; overflow-y: auto;"><code>areas ||--o{ users : "locates"
+areas ||--o{ collection_requests : "services"
+
+users ||--o{ collection_requests : "creates (citizen)"
+users ||--o| workers : "employed_as (worker)"
+users ||--o{ assignments : "dispatches (admin)"
+users ||--o{ feedback : "submits"
+users ||--o{ segregation_records : "audits"
+
+waste_categories ||--o{ collection_requests : "categorizes"
+waste_categories ||--o{ segregation_records : "classifies"
+
+workers ||--o{ assignments : "fulfills"
+
+collection_requests ||--o{ assignments : "delegated_via"
+collection_requests ||--o{ segregation_records : "audited_in"
+collection_requests ||--o{ recycling_records : "recycled_as"
+collection_requests ||--o{ feedback : "evaluated_by"
+collection_requests ||--o{ collection_status_history : "audited_by"</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Library Management System</h1>
+    <p class="page-subtitle">Real-Time DBMS Dashboard &bull; Monitoring Schema State, Transactions &amp; Triggers</p>
+  </div>
+  <div>
+    <a href="{{ url_for('circulation') }}" class="btn btn-primary">📖 Manage Circulation</a>
+    <a href="{{ url_for('sql_console') }}" class="btn btn-secondary">⚡ Run SQL Queries</a>
+  </div>
+</div>
+
+<!-- Metrics Overview -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Book Titles</span>
+    <span class="metric-value">{{ stats.total_titles }}</span>
+    <span class="metric-footer">📚 Distinct titles in catalog</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Total Inventory</span>
+    <span class="metric-value">{{ stats.available_inventory }} <small style="font-size:1rem;color:var(--text-muted);font-weight:400;">/ {{ stats.total_inventory }}</small></span>
+    <span class="metric-footer">📗 Available copies in stock</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Active Loans</span>
+    <span class="metric-value">{{ stats.active_loans }}</span>
+    <span class="metric-footer">🔄 Books currently issued</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Overdue Loans</span>
+    <span class="metric-value" style="color:var(--danger);">{{ stats.overdue_loans }}</span>
+    <span class="metric-footer">⚠️ Past return deadline</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Active Members</span>
+    <span class="metric-value">{{ stats.active_members }}</span>
+    <span class="metric-footer">👥 Registered library users</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Unpaid Fines</span>
+    <span class="metric-value" style="color:var(--danger);">${{ "%.2f"|format(stats.unpaid_fines) }}</span>
+    <span class="metric-footer">💵 Collected: ${{ "%.2f"|format(stats.collected_fines) }}</span>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
+  <!-- Left Column: Active Loans & Category Statistics -->
+  <div>
+    <!-- Active Loans Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Current Active Loans</h2>
+        <a href="{{ url_for('circulation') }}" class="btn btn-secondary btn-sm">View All in Circulation</a>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Loan ID</th>
+              <th>Book Title</th>
+              <th>Borrower</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loan in active_loans %}
+            <tr>
+              <td><strong>#{{ loan.loan_id }}</strong></td>
+              <td>
+                <a href="{{ url_for('book_detail', book_id=loan.book_id) }}" style="color:var(--primary);text-decoration:none;font-weight:500;">
+                  {{ loan.book_title }}
+                </a>
+              </td>
+              <td>{{ loan.member_name }}</td>
+              <td>{{ loan.due_date }}</td>
+              <td>
+                {% if loan.days_overdue > 0 %}
+                  <span class="badge badge-danger">Overdue ({{ loan.days_overdue }} days)</span>
+                {% else %}
+                  <span class="badge badge-success">On Schedule</span>
+                {% endif %}
+              </td>
+              <td>
+                <form action="{{ url_for('return_book_route', loan_id=loan.loan_id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-secondary btn-sm">Return</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No active loans currently.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Category Stats (View: v_category_stats) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Subject Categories Inventory <span class="sql-badge">v_category_stats</span></h2>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Unique Titles</th>
+              <th>Total Stock</th>
+              <th>Available</th>
+              <th>Borrowed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in category_stats %}
+            <tr>
+              <td><strong>{{ cat.category_name }}</strong></td>
+              <td>{{ cat.title_count }}</td>
+              <td>{{ cat.total_stock }}</td>
+              <td><span class="badge badge-success">{{ cat.currently_available }}</span></td>
+              <td><span class="badge badge-warning">{{ cat.currently_borrowed }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Audit Logs / Trigger Feed -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">DBMS Trigger Logs</h2>
+        <span class="badge badge-info">Table: audit_logs</span>
+      </div>
+      <div class="card-body" style="padding:0.75rem 1rem;">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+          Rows below are automatically populated by SQL triggers (<span class="sql-badge">AFTER INSERT / UPDATE</span>) on transactions:
+        </p>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;max-height:480px;overflow-y:auto;">
+          {% for log in audit_logs %}
+          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:0.65rem 0.85rem;font-size:0.825rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+              <span class="badge {% if 'INSERT' in log.action %}badge-success{% elif 'RETURN' in log.action %}badge-info{% else %}badge-warning{% endif %}">
+                {{ log.action }}
+              </span>
+              <span style="color:var(--text-muted);font-size:0.75rem;">{{ log.timestamp }}</span>
+            </div>
+            <div style="color:var(--text-main);font-weight:500;">{{ log.details }}</div>
+          </div>
+          {% else %}
+          <div style="text-align:center;color:var(--text-muted);padding:1.5rem;">No trigger log entries yet. Perform a loan or return to test!</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick DBMS Features Card -->
+    <div class="card" style="background:#f8fafc;">
+      <div class="card-body">
+        <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">DBMS Features Enforced:</h3>
+        <ul style="font-size:0.85rem;color:var(--text-muted);padding-left:1.2rem;line-height:1.6;">
+          <li><strong>ACID Transactions:</strong> Atomic book issue &amp; return</li>
+          <li><strong>Referential Integrity:</strong> Cascade &amp; restrict rules</li>
+          <li><strong>Check Constraints:</strong> Valid quantities, dates, status</li>
+          <li><strong>Triggers:</strong> Real-time inventory sync &amp; audit logging</li>
+          <li><strong>Virtual Views:</strong> Denormalized book &amp; fine summaries</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

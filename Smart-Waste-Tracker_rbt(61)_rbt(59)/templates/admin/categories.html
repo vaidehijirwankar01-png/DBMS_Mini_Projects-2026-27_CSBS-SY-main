@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Waste Categories - Admin - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold mb-1">Waste Segregation Categories</h3>
+    <p class="text-muted small mb-0">Master categorization driving bin color codes, citizen instructions, and disposal routing</p>
+</div>
+
+<div class="row g-4">
+    {% for cat in categories %}
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm rounded-3 p-4 bg-white border-top border-4" style="border-top-color: {{ cat.color_code or '#28a745' }} !important;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge" style="background-color: {{ cat.color_code or '#28a745' }}; font-size: 0.85rem;">
+                    Category #{{ cat.category_id }}
+                </span>
+                <span class="rounded-circle border" style="width: 20px; height: 20px; background-color: {{ cat.color_code }};"></span>
+            </div>
+            <h5 class="fw-bold text-dark mt-2">{{ cat.category_name }}</h5>
+            <p class="text-secondary small mb-3">{{ cat.description }}</p>
+            <div class="p-3 bg-light rounded-3 mt-auto">
+                <span class="fw-semibold text-dark small d-block mb-1"><i class="bi bi-info-circle me-1 text-success"></i> Instructions:</span>
+                <p class="text-muted small mb-0">{{ cat.segregation_instructions }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <p class="text-muted text-center py-4">No waste categories found.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

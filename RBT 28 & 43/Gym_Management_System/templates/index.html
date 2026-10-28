@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Dashboard</h3>
+<div class="row g-3 my-2">
+  {% for label, val in [("Members", s.members), ("Active Memberships", s.active), ("Trainers", s.trainers), ("Revenue (₹)", s.revenue)] %}
+  <div class="col-md-3"><div class="card text-center shadow-sm"><div class="card-body">
+    <div class="text-muted">{{ label }}</div><h2>{{ val }}</h2></div></div></div>
+  {% endfor %}
+</div>
+<h5 class="mt-4">Memberships expiring in 7 days</h5>
+<table class="table table-striped bg-white">
+  <tr><th>Member</th><th>Plan</th><th>Ends</th></tr>
+  {% for e in expiring %}<tr><td>{{ e.name }}</td><td>{{ e.plan_type }}</td><td>{{ e.end_date }}</td></tr>
+  {% else %}<tr><td colspan="3" class="text-muted">None</td></tr>{% endfor %}
+</table>
+{% endblock %}

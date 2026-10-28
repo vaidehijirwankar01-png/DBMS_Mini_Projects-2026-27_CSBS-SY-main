@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Dashboard - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Worker Operational Portal</h3>
+        <p class="text-muted small mb-0">Welcome back, {{ worker.full_name }} • Worker ID: #W-{{ worker.worker_id }}</p>
+    </div>
+    <span class="badge bg-{{ worker.availability_status | status_badge }} fs-6 px-3 py-2">
+        Status: {{ worker.availability_status }}
+    </span>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-warning border-4">
+            <span class="text-muted small fw-semibold text-uppercase">Active Tasks</span>
+            <h3 class="fw-bold my-1 text-warning">{{ stats.active_tasks or 0 }}</h3>
+            <small class="text-muted">Awaiting completion</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-success border-4">
+            <span class="text-muted small fw-semibold text-uppercase">Completed Tasks</span>
+            <h3 class="fw-bold my-1 text-success">{{ stats.completed_tasks or 0 }}</h3>
+            <small class="text-muted">Lifetime collections</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-info border-4">
+            <span class="text-muted small fw-semibold text-uppercase">Total Assigned</span>
+            <h3 class="fw-bold my-1 text-info">{{ stats.total_assigned or 0 }}</h3>
+            <small class="text-muted">Historical assignments</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-primary border-4">
+            <span class="text-muted small fw-semibold text-uppercase">Citizen Rating</span>
+            <h3 class="fw-bold my-1 text-primary">
+                <i class="bi bi-star-fill text-warning fs-5"></i> {{ stats.avg_rating | round(1) or '—' }} <span class="fs-6 text-muted">/ 5.0</span>
+            </h3>
+            <small class="text-muted">Customer satisfaction</small>
+        </div>
+    </div>
+</div>
+
+<!-- Current Tasks Queue -->
+<div class="card border-0 shadow-sm rounded-3 bg-white p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Current Active Tasks</h5>
+        <a href="{{ url_for('worker.tasks') }}" class="btn btn-outline-secondary btn-sm">View All Tasks</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Req #</th>
+                    <th>Citizen</th>
+                    <th>Category</th>
+                    <th>Pickup Address</th>
+                    <th>Scheduled Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in active_tasks %}
+                <tr>
+                    <td class="fw-bold">#{{ t.request_id }}</td>
+                    <td>
+                        <span class="fw-semibold">{{ t.citizen_name }}</span>
+                        <small class="text-muted d-block">{{ t.citizen_phone or 'No phone' }}</small>
+                    </td>
+                    <td>
+                        <span class="badge" style="background-color: {{ t.color_code or '#28a745' }};">
+                            {{ t.category_name }}
+                        </span>
+                    </td>
+                    <td class="small">{{ t.pickup_address }}</td>
+                    <td>{{ t.preferred_date | format_date }}</td>
+                    <td><span class="badge bg-{{ t.request_status | status_badge }}">{{ t.request_status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('worker.task_detail', request_id=t.request_id) }}" class="btn btn-sm btn-success">
+                            Manage Task
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="bi bi-check2-circle fs-3 d-block text-success mb-2"></i>
+                        No active assignments pending. You are caught up!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

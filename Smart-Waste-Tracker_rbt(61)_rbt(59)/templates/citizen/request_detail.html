@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ req.request_id }} Tracking - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('citizen.requests') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Requests
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <!-- Main Request Status Card -->
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Collection Request #{{ req.request_id }}</h4>
+                <span class="badge bg-{{ req.status | status_badge }} fs-6 px-3 py-2">{{ req.status }}</span>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="my-4">
+                <div class="d-flex justify-content-between text-center small position-relative">
+                    <div class="text-{{ 'success fw-bold' if req.status in ['Pending', 'Assigned', 'In Progress', 'Collected', 'Completed'] else 'muted' }}">
+                        <i class="bi bi-circle-fill d-block mb-1"></i> Pending
+                    </div>
+                    <div class="text-{{ 'success fw-bold' if req.status in ['Assigned', 'In Progress', 'Collected', 'Completed'] else 'muted' }}">
+                        <i class="bi bi-circle-fill d-block mb-1"></i> Assigned
+                    </div>
+                    <div class="text-{{ 'success fw-bold' if req.status in ['In Progress', 'Collected', 'Completed'] else 'muted' }}">
+                        <i class="bi bi-circle-fill d-block mb-1"></i> In Progress
+                    </div>
+                    <div class="text-{{ 'success fw-bold' if req.status in ['Collected', 'Completed'] else 'muted' }}">
+                        <i class="bi bi-circle-fill d-block mb-1"></i> Collected
+                    </div>
+                    <div class="text-{{ 'success fw-bold' if req.status == 'Completed' else 'muted' }}">
+                        <i class="bi bi-circle-fill d-block mb-1"></i> Completed
+                    </div>
+                </div>
+                <div class="progress mt-2" style="height: 6px;">
+                    {% set pct = 0 %}
+                    {% if req.status == 'Pending' %}{% set pct = 20 %}
+                    {% elif req.status == 'Assigned' %}{% set pct = 40 %}
+                    {% elif req.status == 'In Progress' %}{% set pct = 60 %}
+                    {% elif req.status == 'Collected' %}{% set pct = 80 %}
+                    {% elif req.status == 'Completed' %}{% set pct = 100 %}
+                    {% endif %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ pct }}%"></div>
+                </div>
+            </div>
+
+            <div class="row g-3 py-2 border-top border-bottom my-2">
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Waste Classification</small>
+                    <span class="badge" style="background-color: {{ req.color_code or '#28a745' }}; font-size: 0.9rem;">
+                        {{ req.category_name }}
+                    </span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Service Zone</small>
+                    <span class="fw-semibold">{{ req.area_name }} (PIN: {{ req.postal_code }})</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Estimated Quantity</small>
+                    <span class="fw-bold">{{ req.estimated_quantity_kg }} kg</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Actual Measured Weight</small>
+                    <span class="fw-bold text-success">{{ req.actual_quantity_kg or 'Awaiting pickup measurement' }} {% if req.actual_quantity_kg %}kg{% endif %}</span>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted d-block">Pickup Address</small>
+                    <p class="mb-0 text-dark">{{ req.pickup_address }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Preferred Date</small>
+                    <span class="fw-semibold text-primary">{{ req.preferred_date | format_date }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <small class="text-muted d-block">Assigned Worker</small>
+                    <span class="fw-semibold">{{ req.worker_name or 'Pending Assignment' }}</span>
+                </div>
+                {% if req.notes %}
+                <div class="col-12">
+                    <small class="text-muted d-block">Your Notes</small>
+                    <p class="mb-0 text-secondary small bg-light p-2 rounded">{{ req.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if req.status == 'Pending' %}
+            <div class="mt-4 pt-2 text-end">
+                <form method="POST" action="{{ url_for('citizen.cancel', request_id=req.request_id) }}" onsubmit="return confirm('Are you sure you want to cancel this request?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-x-circle me-1"></i> Cancel Request
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Feedback Section -->
+        {% if req.status == 'Completed' %}
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning me-1"></i> Collection Rating & Review</h5>
+            
+            {% if feedback %}
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="mb-2">
+                        {% for i in range(feedback.rating) %}
+                            <i class="bi bi-star-fill text-warning fs-5"></i>
+                        {% endfor %}
+                        {% for i in range(5 - feedback.rating) %}
+                            <i class="bi bi-star text-muted fs-5"></i>
+                        {% endfor %}
+                        <span class="fw-bold ms-2">({{ feedback.rating }} / 5)</span>
+                    </div>
+                    <p class="mb-1 text-dark fst-italic">"{{ feedback.comments or 'No written feedback provided.' }}"</p>
+                    <small class="text-muted">Submitted on {{ feedback.submitted_at | format_date('%d %b %Y') }}</small>
+                </div>
+            {% else %}
+                <form method="POST" action="{{ url_for('citizen.submit_feedback', request_id=req.request_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">How was your sanitation collection service?</label>
+                        <select name="rating" class="form-select" required>
+                            <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ 4 - Very Good</option>
+                            <option value="3">⭐⭐⭐ 3 - Satisfactory</option>
+                            <option value="2">⭐⭐ 2 - Needs Improvement</option>
+                            <option value="1">⭐ 1 - Unsatisfactory</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Comments & Feedback</label>
+                        <textarea name="comments" class="form-control" rows="2" placeholder="Was the waste picked up on time? Was the worker courteous?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success fw-semibold">
+                        <i class="bi bi-check2-circle me-1"></i> Submit Review
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Status Log History -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history text-success me-1"></i> Status Log Trail</h5>
+            <div class="timeline ps-2">
+                {% for h in history %}
+                <div class="border-start border-2 border-success ps-3 pb-3 position-relative">
+                    <div class="position-absolute translate-middle-x bg-success rounded-circle" style="width: 10px; height: 10px; left: -1px; top: 4px;"></div>
+                    <span class="badge bg-{{ h.new_status | status_badge }}">{{ h.new_status }}</span>
+                    <small class="text-muted d-block mt-1">{{ h.changed_at | format_date('%d %b %Y, %H:%M') }}</small>
+                    <p class="text-secondary small mb-0 mt-1">{{ h.remarks }}</p>
+                </div>
+                {% else %}
+                <p class="text-muted small">No audit history entries found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

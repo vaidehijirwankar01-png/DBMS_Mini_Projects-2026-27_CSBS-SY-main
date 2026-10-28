@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DevJourney</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --bg-panel:#141a21; --bg-panel-2:#0f1520;
+    --line:#1f2b38; --text:#dbe4ea; --text-dim:#7c8a99; --text-faint:#4c5a68;
+    --green:#5fd68a; --blue:#6fb6ff; --yellow:#e8c07d; --pink:#f286c4; --red:#ef6a6a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:#1e3a2a;color:var(--green);}
+
+  /* ===== AUTH PAGE ===== */
+  #view-auth{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 20% 20%, #10251a33, transparent 40%),
+      radial-gradient(circle at 80% 80%, #10203622, transparent 40%),
+      var(--bg);
+  }
+  .auth-card{
+    width:380px; background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:12px; padding:32px 30px; position:relative;
+  }
+  .auth-brand{display:flex;align-items:center;gap:9px;margin-bottom:26px;}
+  .dot-row{display:flex;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;}
+  .dot:nth-child(1){background:var(--red);} .dot:nth-child(2){background:var(--yellow);} .dot:nth-child(3){background:var(--green);}
+  .auth-brand-name{font-family:'JetBrains Mono';font-weight:700;font-size:15px;}
+  .auth-brand-name span{color:var(--green);}
+  .auth-title{font-size:19px;font-weight:700;margin-bottom:4px;}
+  .auth-sub{font-size:12.5px;color:var(--text-faint);font-family:'JetBrains Mono';margin-bottom:24px;}
+  .auth-sub::before{content:"// ";}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);margin-bottom:6px;}
+  .field input{
+    width:100%; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text);
+    padding:10px 12px; border-radius:7px; font-size:13px; font-family:'Inter';
+  }
+  .field input:focus{outline:none;border-color:var(--green);}
+  .auth-btn{
+    width:100%; background:var(--green); color:#0a1410; border:none; font-weight:700;
+    padding:11px; border-radius:7px; font-size:13.5px; margin-top:6px;
+  }
+  .auth-alt{text-align:center;font-size:12.5px;color:var(--text-faint);margin-top:18px;}
+  .auth-alt a, .link-fake{color:var(--blue);cursor:pointer;text-decoration:none;}
+  .auth-forgot{display:flex;justify-content:flex-end;margin:-10px 0 16px;}
+  .auth-forgot span{font-size:11.5px;color:var(--text-faint);cursor:pointer;}
+  .auth-tabs{display:flex;gap:6px;background:var(--bg-panel-2);padding:4px;border-radius:8px;margin-bottom:22px;}
+  .auth-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-family:'JetBrains Mono';font-size:12px;color:var(--text-faint);}
+  .auth-tab.active{background:#132018;color:var(--green);}
+  #view-auth.hidden{display:none;}
+
+  /* ===== APP SHELL ===== */
+  #view-app.hidden{display:none;}
+  .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+  .sidebar{background:var(--bg-panel-2);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:24px;position:sticky;top:0;height:100vh;}
+  .brand{display:flex;align-items:center;gap:9px;padding:0 6px;}
+  .brand-name{font-family:'JetBrains Mono';font-weight:700;font-size:14.5px;}
+  .brand-name span{color:var(--green);}
+  .nav-group-label{font-family:'JetBrains Mono';font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--text-faint);padding:0 10px;margin-bottom:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:13.5px;color:var(--text-dim);font-family:'JetBrains Mono';margin-bottom:2px;}
+  .nav-item .ic{width:15px;text-align:center;font-size:13px;opacity:.85;}
+  .nav-item:hover{background:#161d26;color:var(--text);}
+  .nav-item.active{background:#132018;color:var(--green);border:1px solid #1e3a2a;}
+  .nav-item .badge{margin-left:auto;background:#1c2530;color:var(--text-dim);font-size:10px;padding:1px 6px;border-radius:10px;}
+  .sidebar-footer{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;display:flex;align-items:center;gap:10px;}
+  .avatar{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--pink));display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:#0d1117;flex-shrink:0;}
+  .user-meta{line-height:1.3;}
+  .user-meta .name{font-size:12.5px;font-weight:600;}
+  .user-meta .role{font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono';}
+  .logout-btn{margin-left:auto;background:none;border:none;color:var(--text-faint);font-size:14px;}
+  .logout-btn:hover{color:var(--red);}
+
+  .main{padding:26px 34px 60px;max-width:1240px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;flex-wrap:wrap;gap:14px;}
+  .eyebrow{font-family:'JetBrains Mono';font-size:11.5px;color:var(--green);letter-spacing:.5px;margin-bottom:6px;}
+  .eyebrow::before{content:"// ";color:var(--text-faint);}
+  .page-title{font-size:24px;font-weight:700;letter-spacing:-.3px;}
+  .cursor{display:inline-block;width:9px;height:20px;background:var(--green);margin-left:4px;vertical-align:-3px;animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .chip{font-family:'JetBrains Mono';background:#1c1712;border:1px solid #3a2c17;color:var(--yellow);font-size:12.5px;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:8px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:20px 20px 18px;margin-bottom:16px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .panel-title{font-family:'JetBrains Mono';font-size:13px;font-weight:600;}
+  .panel-title .path{color:var(--text-faint);font-weight:400;}
+  .btn-mini{background:#161d26;border:1px solid var(--line);color:var(--text-dim);font-family:'JetBrains Mono';font-size:11px;padding:6px 12px;border-radius:6px;}
+  .btn-mini:hover{color:var(--text);border-color:#2a3744;}
+  .btn-mini.green{color:var(--green);border-color:#1e3a2a;}
+
+  /* stat row */
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .stat-label{font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);margin-bottom:10px;}
+  .stat-value{font-size:26px;font-weight:700;font-family:'JetBrains Mono';}
+  .stat-sub{font-size:11.5px;color:var(--text-faint);margin-top:4px;}
+  .stat-card.green .stat-value{color:var(--green);}
+  .stat-card.blue .stat-value{color:var(--blue);}
+  .stat-card.yellow .stat-value{color:var(--yellow);}
+  .stat-card.pink .stat-value{color:var(--pink);}
+
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+  .grid-2b{display:grid;grid-template-columns:1fr 1.3fr;gap:16px;}
+  @media(max-width:900px){.grid-2,.grid-2b,.stat-row{grid-template-columns:1fr;}}
+
+  .chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:10px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;}
+  .bar{width:100%;max-width:26px;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,var(--green),#28603f);}
+  .bar.dim{background:linear-gradient(180deg,#2a3038,#1a1f26);}
+  .bar-day{font-family:'JetBrains Mono';font-size:10px;color:var(--text-faint);}
+
+  .lang-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:'JetBrains Mono';font-size:12px;}
+  .lang-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+  .lang-name{width:80px;color:var(--text-dim);}
+  .lang-bar-track{flex:1;height:6px;background:#1a2029;border-radius:3px;overflow:hidden;}
+  .lang-bar-fill{height:100%;border-radius:3px;}
+  .lang-pct{width:36px;text-align:right;color:var(--text-faint);}
+
+  /* DSA topic rows */
+  .topic-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;}
+  .topic-row:last-child{border-bottom:none;}
+  .topic-status{width:20px;text-align:center;font-size:13px;}
+  .topic-name{width:150px;font-family:'JetBrains Mono';font-size:13px;font-weight:500;}
+  .topic-track{flex:1;height:8px;background:#1a2029;border-radius:4px;overflow:hidden;}
+  .topic-fill{height:100%;border-radius:4px;}
+  .topic-pct{width:42px;text-align:right;font-family:'JetBrains Mono';font-size:12px;color:var(--text-dim);}
+  .topic-count{width:60px;text-align:right;font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);}
+  .topic-action{width:90px;text-align:right;}
+  .topic-caret{width:16px;text-align:center;color:var(--text-faint);font-size:11px;transition:transform .15s;}
+  .topic-block.open .topic-caret{transform:rotate(90deg);}
+  .complete-btn{background:#132018;border:1px solid #1e3a2a;color:var(--green);font-family:'JetBrains Mono';font-size:10.5px;padding:5px 10px;border-radius:6px;}
+  .complete-btn:hover{background:#17301f;}
+  .complete-btn.done{background:#161d26;border-color:var(--line);color:var(--text-faint);}
+
+  /* question list under each topic */
+  .question-list{display:none;background:#0f1520;border-radius:8px;margin:4px 0 12px;padding:6px 14px;}
+  .topic-block.open .question-list{display:block;}
+  .question-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #1a222c;}
+  .question-row:last-child{border-bottom:none;}
+  .q-checkbox{width:17px;height:17px;border-radius:5px;border:1.5px solid #2a3744;background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);}
+  .q-checkbox.checked{background:#17301f;border-color:var(--green);}
+  .q-name{flex:1;font-size:12.5px;color:var(--text);}
+  .q-row.solved .q-name{color:var(--text);text-decoration:none;}
+  .q-diff{font-family:'JetBrains Mono';font-size:9.5px;padding:2px 7px;border-radius:8px;text-transform:uppercase;}
+  .q-diff.easy{background:#132018;color:var(--green);}
+  .q-diff.medium{background:#1c1712;color:var(--yellow);}
+  .q-diff.hard{background:#22131a;color:var(--red);}
+  .q-link{font-family:'JetBrains Mono';font-size:11px;color:var(--blue);text-decoration:none;white-space:nowrap;}
+  .q-link:hover{text-decoration:underline;}
+  .add-question-row{padding:10px 4px 4px;}
+  .add-q-btn{font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);background:none;border:1px dashed var(--line);border-radius:6px;padding:6px 12px;width:100%;text-align:left;}
+  .add-q-btn:hover{color:var(--green);border-color:#1e3a2a;}
+
+  /* streak grid (github style) */
+  .streak-wrap{overflow-x:auto;padding-bottom:6px;}
+  .streak-grid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;width:max-content;}
+  .streak-cell{width:12px;height:12px;border-radius:3px;background:#161d26;}
+  .streak-cell.l1{background:#12331f;} .streak-cell.l2{background:#1a5030;} .streak-cell.l3{background:#237c41;} .streak-cell.l4{background:var(--green);}
+  .streak-legend{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-faint);margin-top:10px;}
+  .streak-legend .streak-cell{width:10px;height:10px;}
+
+  /* projects grid */
+  .projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:900px){.projects-grid{grid-template-columns:1fr;}}
+  .project-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .project-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .project-name{font-family:'JetBrains Mono';font-weight:600;font-size:13.5px;}
+  .status-pill{font-family:'JetBrains Mono';font-size:9.5px;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px;}
+  .status-pill.active{background:#132018;color:var(--green);border:1px solid #1e3a2a;}
+  .status-pill.planned{background:#1c1712;color:var(--yellow);border:1px solid #3a2c17;}
+  .status-pill.done{background:#12181f;color:var(--blue);border:1px solid #1e2a38;}
+  .project-desc{font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:14px;min-height:36px;}
+  .tech-tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .tech-tag{font-family:'JetBrains Mono';font-size:10px;background:#161d26;color:var(--text-dim);padding:2px 7px;border-radius:4px;}
+  .progress-track{height:4px;background:#1a2029;border-radius:2px;margin-top:12px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--green);border-radius:2px;}
+  .add-project-card{border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'JetBrains Mono';font-size:12px;min-height:120px;}
+  .add-project-card:hover{color:var(--green);border-color:#1e3a2a;}
+
+  /* goals */
+  .goal-card{margin-bottom:18px;}
+  .goal-top{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .goal-name{font-family:'JetBrains Mono';font-size:13px;font-weight:600;}
+  .goal-count{font-family:'JetBrains Mono';font-size:12px;color:var(--text-dim);}
+  .goal-track{height:10px;background:#1a2029;border-radius:5px;overflow:hidden;}
+  .goal-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--green));}
+  .goal-meta{font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);margin-top:6px;}
+
+  .skill-item{margin-bottom:14px;}
+  .skill-top{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:12px;margin-bottom:6px;}
+  .skill-top .lvl{color:var(--text-faint);}
+  .skill-track{height:7px;background:#1a2029;border-radius:4px;overflow:hidden;}
+  .skill-fill{height:100%;border-radius:4px;}
+
+  .log-entry{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .log-entry:last-child{border-bottom:none;}
+  .log-time{font-family:'JetBrains Mono';color:var(--text-faint);font-size:11px;width:52px;flex-shrink:0;padding-top:1px;}
+  .log-dot-col{display:flex;flex-direction:column;align-items:center;}
+  .log-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-top:4px;}
+  .log-line{flex:1;width:1px;background:var(--line);margin-top:4px;}
+  .log-text{color:var(--text);}
+  .log-sub{color:var(--text-faint);font-family:'JetBrains Mono';font-size:11px;margin-top:2px;}
+
+  .empty-note{font-family:'JetBrains Mono';font-size:11.5px;color:var(--text-faint);background:#0f1520;border:1px dashed var(--line);border-radius:8px;padding:12px 14px;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH VIEW ============ -->
+<div id="view-auth">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="dot-row"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="auth-brand-name">dev<span>journey</span></div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">login</div>
+      <div class="auth-tab" id="tab-signup" onclick="showAuthTab('signup')">sign_up</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">continue your streak</div>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <div class="auth-forgot"><span onclick="showAuthTab('forgot')">Forgot password?</span></div>
+      <button class="auth-btn" onclick="handleLogin()">Log in</button>
+      <div class="auth-alt">No account? <a onclick="showAuthTab('signup')">Sign up</a></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="form-signup" style="display:none;">
+      <div class="auth-title">Create your account</div>
+      <div class="auth-sub">start tracking today</div>
+      <div class="field"><label>Name</label><input type="text" id="signup-name" placeholder="Rahul Kumar"></div>
+      <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-password" placeholder="min. 8 characters"></div>
+      <button class="auth-btn" onclick="handleSignup()">Create account</button>
+      <div class="auth-alt">Already have an account? <a onclick="showAuthTab('login')">Log in</a></div>
+    </div>
+
+    <!-- FORGOT -->
+    <div id="form-forgot" style="display:none;">
+      <div class="auth-title">Reset password</div>
+      <div class="auth-sub">we'll email you a reset link</div>
+      <div class="field"><label>Email</label><input type="email" placeholder="you@example.com"></div>
+      <button class="auth-btn">Send reset link</button>
+      <div class="auth-alt"><a onclick="showAuthTab('login')">← Back to login</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP VIEW ============ -->
+<div id="view-app" class="hidden">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="dot-row"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="brand-name">dev<span>journey</span></div>
+      </div>
+
+      <div>
+        <div class="nav-group-label">Menu</div>
+        <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)"><span class="ic">▣</span> Dashboard</div>
+        <div class="nav-item" data-page="dsa" onclick="showPage('dsa',this)"><span class="ic">◉</span> DSA Tracker</div>
+        <div class="nav-item" data-page="streak" onclick="showPage('streak',this)"><span class="ic">🔥</span> Streak</div>
+        <div class="nav-item" data-page="projects" onclick="showPage('projects',this)"><span class="ic">◫</span> Projects <span class="badge" id="nav-projects-badge">0</span></div>
+        <div class="nav-item" data-page="goals" onclick="showPage('goals',this)"><span class="ic">◎</span> Goals <span class="badge" id="nav-goals-badge">0</span></div>
+        <div class="nav-item" data-page="profile" onclick="showPage('profile',this)"><span class="ic">◔</span> Profile</div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="avatar">RK</div>
+        <div class="user-meta"><div class="name">Rahul K.</div><div class="role">@rahul.dev</div></div>
+        <button class="logout-btn" onclick="logout()" title="Log out">⏻</button>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="page active" id="page-dashboard">
+        <div class="topbar">
+          <div><div class="eyebrow">status: online</div><div class="page-title">Welcome back, Rahul<span class="cursor"></span></div></div>
+          <div class="chip" id="dashboard-streak-chip">🔥 0-day streak</div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card green"><div class="stat-label">PROBLEMS SOLVED</div><div class="stat-value" id="stat-problems-solved">0</div><div class="stat-sub">from database</div></div>
+          <div class="stat-card blue"><div class="stat-label">TOPICS COUNT</div><div class="stat-value" id="stat-topics-count">0</div><div class="stat-sub">tracked in PostgreSQL</div></div>
+          <div class="stat-card yellow"><div class="stat-label">OVERALL PROGRESS</div><div class="stat-value" id="stat-overall-progress">0%</div><div class="stat-sub">completion rate</div></div>
+          <div class="stat-card pink"><div class="stat-label">TOTAL PROBLEMS</div><div class="stat-value" id="stat-total-problems">0</div><div class="stat-sub">assigned</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">problems_solved<span class="path">.thisWeek()</span></div></div>
+            <div class="chart" id="weekly-activity-chart">
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Mon</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Tue</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Wed</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Thu</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Fri</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Sat</div></div>
+              <div class="bar-col"><div class="bar dim" style="height:0%"></div><div class="bar-day">Sun</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">topics<span class="path">.json</span></div></div>
+            <div id="dashboard-topics-summary">
+              <!-- Dynamically populated from PostgreSQL -->
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2b">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">goals<span class="path">.active</span></div></div>
+            <div id="dashboard-goals-container">
+              <div class="empty-note">Loading goals from PostgreSQL...</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">activity_log<span class="path">.recent</span></div></div>
+            <div id="recent-activity-container">
+              <div class="empty-note">No recent activity logged. Complete a problem to see live activity!</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== DSA TRACKER ===== -->
+      <section class="page" id="page-dsa">
+        <div class="topbar">
+          <div><div class="eyebrow">module_2</div><div class="page-title">DSA Tracker</div></div>
+          <div class="chip" style="background:#12181f;border-color:#1e2a38;color:var(--blue);" id="dsa-solved-count-chip">0 problems solved total</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">topics<span class="path">.progress</span></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn-mini green" onclick="addNewTopicPrompt()">+ new topic</button>
+              <div class="empty-note" style="margin:0;padding:6px 12px;">click a topic to expand its questions</div>
+            </div>
+          </div>
+          <div id="dsa-topics-container"></div>
+        </div>
+      </section>
+
+      <!-- ===== STREAK ===== -->
+      <section class="page" id="page-streak">
+        <div class="topbar">
+          <div><div class="eyebrow">module_3</div><div class="page-title">Coding Streak</div></div>
+          <div class="chip" id="streak-topbar-chip">🔥 0 days — best ever: 0</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">contributions<span class="path">.last90days</span></div></div>
+          <div class="streak-wrap">
+            <div class="streak-grid" id="streak-grid"></div>
+          </div>
+          <div class="streak-legend">
+            <span>less</span>
+            <div class="streak-cell"></div><div class="streak-cell l1"></div><div class="streak-cell l2"></div><div class="streak-cell l3"></div><div class="streak-cell l4"></div>
+            <span>more</span>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card yellow"><div class="stat-label">CURRENT STREAK</div><div class="stat-value" id="streak-stat-current">0</div><div class="stat-sub">days in a row</div></div>
+          <div class="stat-card green"><div class="stat-label">LONGEST STREAK</div><div class="stat-value" id="streak-stat-longest">0</div><div class="stat-sub" id="streak-stat-longest-sub">personal record</div></div>
+          <div class="stat-card blue"><div class="stat-label">ACTIVE DAYS</div><div class="stat-value" id="streak-stat-active-days">0</div><div class="stat-sub">out of last 90 days</div></div>
+          <div class="stat-card pink"><div class="stat-label">CONSISTENCY</div><div class="stat-value" id="streak-stat-consistency">0%</div><div class="stat-sub">last 90 days</div></div>
+        </div>
+      </section>
+
+      <!-- ===== PROJECTS ===== -->
+      <section class="page" id="page-projects">
+        <div class="topbar">
+          <div><div class="eyebrow">module_4</div><div class="page-title">Projects</div></div>
+          <button class="btn-mini green" id="btn-new-project" onclick="openNewProjectModal()">+ new project</button>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">projects<span class="path">.all</span></div>
+            <div id="projects-count-indicator" style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);">loading projects...</div>
+          </div>
+          <div class="projects-grid" id="projects-grid-container">
+            <div class="add-project-card" onclick="openNewProjectModal()" style="cursor:pointer;">+ add project</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== GOALS ===== -->
+      <section class="page" id="page-goals">
+        <div class="topbar">
+          <div><div class="eyebrow">module_5</div><div class="page-title">Weekly Goals</div></div>
+          <button class="btn-mini green" id="btn-topbar-new-goal" onclick="focusGoalInput()">+ new goal</button>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">goals<span class="path">.all</span></div>
+            <div id="goals-count-indicator" style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);">loading goals...</div>
+          </div>
+
+          <!-- Add New Goal Bar -->
+          <div style="margin-bottom:20px;padding:12px 14px;background:#0d1117;border:1px solid var(--line);border-radius:8px;">
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);margin-bottom:8px;">// add new weekly goal to postgresql</div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input type="text" id="goal-input" placeholder="e.g. Solve 20 questions or Finish Linked List..." style="flex:1;background:var(--bg);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:6px;font-family:'JetBrains Mono';font-size:12.5px;outline:none;" onkeydown="if(event.key==='Enter') handleAddGoal()">
+              <button class="btn-mini green" id="btn-add-goal" onclick="handleAddGoal()" style="padding:8px 16px;font-size:12px;cursor:pointer;white-space:nowrap;">Add Goal</button>
+            </div>
+            <div id="goal-error-msg" style="display:none;color:var(--red);font-family:'JetBrains Mono';font-size:11.5px;margin-top:8px;"></div>
+          </div>
+
+          <div id="goals-list-container">
+            <div class="empty-note">Loading goals from PostgreSQL...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PROFILE ===== -->
+      <section class="page" id="page-profile">
+        <div class="topbar">
+          <div><div class="eyebrow">module_1</div><div class="page-title">Your Profile</div></div>
+        </div>
+        <div class="grid-2b">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">account<span class="path">.info</span></div></div>
+            <div class="field"><label>Name</label><input type="text" id="profile-name" placeholder="Your Name"></div>
+            <div class="field"><label>Email</label><input type="email" id="profile-email" placeholder="you@example.com" readonly style="opacity:0.7;cursor:not-allowed;"></div>
+            <div class="field"><label>GitHub username</label><input type="text" id="profile-github" placeholder="github-username"></div>
+            <button class="auth-btn" style="margin-top:4px;" onclick="handleSaveProfile()">Save changes</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">skills<span class="path">.overview</span></div></div>
+            <div class="skill-item"><div class="skill-top"><span>DSA Tracker (Overall)</span><span class="lvl" id="profile-dsa-pct">0%</span></div><div class="skill-track"><div class="skill-fill" id="profile-dsa-fill" style="width:0%;background:var(--green)"></div></div></div>
+            <div class="skill-item"><div class="skill-top"><span>React</span><span class="lvl">Self-rated · 80%</span></div><div class="skill-track"><div class="skill-fill" style="width:80%;background:var(--blue)"></div></div></div>
+            <div class="skill-item"><div class="skill-top"><span>PostgreSQL / SQL</span><span class="lvl">Self-rated · 65%</span></div><div class="skill-track"><div class="skill-fill" style="width:65%;background:var(--yellow)"></div></div></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== PROJECT MODAL (CREATE / EDIT) ===== -->
+<div id="project-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,8,12,0.85);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;">
+  <div class="auth-card" style="width:450px;position:relative;">
+    <button onclick="closeProjectModal()" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;">✕</button>
+    <div class="auth-brand" style="margin-bottom:16px;">
+      <div class="dot-row"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="auth-brand-name">project<span id="modal-project-title-path">.new()</span></div>
+    </div>
+    <div class="auth-title" id="modal-project-heading" style="font-size:16px;margin-bottom:4px;">New Project</div>
+    <div class="auth-sub" id="modal-project-sub" style="margin-bottom:18px;">// postgresql projects table</div>
+    
+    <input type="hidden" id="modal-project-id" value="">
+
+    <div class="field">
+      <label>Project Title *</label>
+      <input type="text" id="modal-project-title" placeholder="e.g. AI Study Planner">
+    </div>
+
+    <div class="field">
+      <label>Description</label>
+      <textarea id="modal-project-desc" rows="3" style="width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:7px;font-size:13px;font-family:'Inter';resize:vertical;" placeholder="Brief summary of your project..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Tech Stack (comma-separated)</label>
+      <input type="text" id="modal-project-tech" placeholder="e.g. React, Flask, PostgreSQL">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="field">
+        <label>Status</label>
+        <select id="modal-project-status" onchange="handleModalStatusChange()" style="width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:7px;font-size:13px;font-family:'Inter';">
+          <option value="in progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="planned">Planned</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Progress (%)</label>
+        <input type="number" id="modal-project-progress" min="0" max="100" placeholder="50" value="50">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button class="auth-btn" id="modal-project-submit-btn" style="flex:1;" onclick="handleSaveProject()">Save Project</button>
+      <button type="button" class="btn-mini" style="padding:10px 16px;border-radius:7px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);" onclick="closeProjectModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showAuthTab(tab){
+    document.getElementById('form-login').style.display = tab==='login' ? 'block':'none';
+    document.getElementById('form-signup').style.display = tab==='signup' ? 'block':'none';
+    document.getElementById('form-forgot').style.display = tab==='forgot' ? 'block':'none';
+    document.getElementById('tab-login').classList.toggle('active', tab==='login');
+    document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+    document.querySelector('.auth-tabs').style.display = tab==='forgot' ? 'none':'flex';
+  }
+  
+  async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    if (!name || !email || !password) {
+      alert('Please fill in your name, email, and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Signup successful! Your DSA topics have been created in PostgreSQL. Please log in.');
+        document.getElementById('signup-name').value = '';
+        document.getElementById('signup-email').value = '';
+        document.getElementById('signup-password').value = '';
+        showAuthTab('login');
+        document.getElementById('login-email').value = email;
+      } else {
+        alert(data.message || 'Signup failed');
+      }
+    } catch (err) {
+      console.error('Signup error:', err);
+      alert('Backend server unavailable. Please make sure the Flask backend is running on port 5000.');
+    }
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store logged-in user credentials
+        localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('user_name', data.name);
+        localStorage.setItem('user_email', data.email || email);
+        if (data.github_username) localStorage.setItem('user_github', data.github_username);
+
+        updateUserInterface(data.name, data.email);
+        document.getElementById('view-auth').classList.add('hidden');
+        document.getElementById('view-app').classList.remove('hidden');
+
+        loadDashboard();
+        loadDSA();
+        loadProjects();
+        loadGoals();
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      alert('Backend server unavailable. Please make sure the Flask backend is running on port 5000.');
+    }
+  }
+
+  function updateUserInterface(name, email) {
+    if (!name) return;
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const avatarEl = document.querySelector('.sidebar-footer .avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+    const nameEl = document.querySelector('.user-meta .name');
+    if (nameEl) nameEl.textContent = name;
+    const roleEl = document.querySelector('.user-meta .role');
+    if (roleEl) roleEl.textContent = '@' + name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const welcomeEl = document.querySelector('.page-title');
+    if (welcomeEl && welcomeEl.textContent.includes('Welcome')) {
+      welcomeEl.innerHTML = `Welcome back, ${escapeHtml(name)}<span class="cursor"></span>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function enterApp(){
+    document.getElementById('view-auth').classList.add('hidden');
+    document.getElementById('view-app').classList.remove('hidden');
+  }
+
+  async function logout(){
+    try {
+      await fetch('http://127.0.0.1:5000/api/logout', { method: 'POST', credentials: 'include' });
+    } catch(e) {}
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_github');
+    document.getElementById('view-app').classList.add('hidden');
+    document.getElementById('view-auth').classList.remove('hidden');
+    showAuthTab('login');
+  }
+
+  function showPage(name, el){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + name);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'dsa') loadDSA();
+    if (name === 'streak') loadStreakGrid();
+    if (name === 'profile') loadProfile();
+    if (name === 'projects') loadProjects();
+    if (name === 'goals') loadGoals();
+  }
+
+  async function loadProfile() {
+    const userId = localStorage.getItem('user_id');
+    if (!userId) return;
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/users/${userId}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const nameInp = document.getElementById('profile-name');
+        const emailInp = document.getElementById('profile-email');
+        const ghInp = document.getElementById('profile-github');
+        if (nameInp) nameInp.value = data.name || '';
+        if (emailInp) emailInp.value = data.email || '';
+        if (ghInp) ghInp.value = data.github_username || '';
+      }
+
+      // Populate real DSA tracker percentage in skills section
+      const dRes = await fetch(`http://127.0.0.1:5000/api/dashboard?user_id=${userId}`, { credentials: 'include' });
+      if (dRes.ok) {
+        const dData = await dRes.json();
+        const dsaPctEl = document.getElementById('profile-dsa-pct');
+        const dsaFillEl = document.getElementById('profile-dsa-fill');
+        if (dsaPctEl) dsaPctEl.textContent = `${dData.progress}% (${dData.solved_problems}/${dData.total_problems})`;
+        if (dsaFillEl) dsaFillEl.style.width = `${Math.min(100, dData.progress)}%`;
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  }
+
+  async function handleSaveProfile() {
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+      alert('Please log in first.');
+      return;
+    }
+
+    const name = document.getElementById('profile-name').value.trim();
+    const github_username = document.getElementById('profile-github').value.trim();
+
+    if (!name) {
+      alert('Name cannot be empty.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/users/${userId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, github_username })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Profile updated successfully in PostgreSQL!');
+        localStorage.setItem('user_name', data.user.name);
+        updateUserInterface(data.user.name, data.user.email);
+      } else {
+        alert(data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      alert('Failed to connect to backend server');
+    }
+  }
+
+function toggleTopic(row){
+  const block = row.closest('.topic-block');
+  block.classList.toggle('open');
+}
+
+// READ: Load real weekly activity chart (Monday through Sunday)
+async function loadWeeklyActivity() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) return;
+
+  const chart = document.getElementById('weekly-activity-chart');
+  if (!chart) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/weekly-activity?user_id=${userId}`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      const days = data.weekly_activity || [];
+      chart.innerHTML = days.map(d => {
+        const pct = d.percentage || 0;
+        const isDim = d.count === 0;
+        const todayStyle = d.is_today ? 'style="color:var(--green);font-weight:600;"' : '';
+        const tooltip = `${d.day} (${d.date}): ${d.count} problem${d.count === 1 ? '' : 's'} solved`;
+        return `
+          <div class="bar-col" title="${tooltip}">
+            <div class="bar ${isDim ? 'dim' : ''}" style="height:${pct}%;"></div>
+            <div class="bar-day" ${todayStyle}>${d.day}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    console.error('Error loading weekly activity:', err);
+  }
+}
+
+// READ: Load real 90-day streak contribution grid & streak metrics
+async function loadStreakGrid() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) return;
+
+  const grid = document.getElementById('streak-grid');
+  const chipEl = document.getElementById('streak-topbar-chip');
+  const curEl = document.getElementById('streak-stat-current');
+  const longEl = document.getElementById('streak-stat-longest');
+  const longSubEl = document.getElementById('streak-stat-longest-sub');
+  const actDaysEl = document.getElementById('streak-stat-active-days');
+  const consEl = document.getElementById('streak-stat-consistency');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/streak-grid?user_id=${userId}`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+
+      if (chipEl) {
+        chipEl.textContent = `🔥 ${data.current_streak} days — best ever: ${data.longest_streak}`;
+      }
+      if (curEl) curEl.textContent = data.current_streak;
+      if (longEl) longEl.textContent = data.longest_streak;
+      if (longSubEl) longSubEl.textContent = `personal record: ${data.longest_streak} days`;
+      if (actDaysEl) actDaysEl.textContent = data.active_days_90;
+      if (consEl) consEl.textContent = `${data.consistency_pct}%`;
+
+      if (grid) {
+        grid.innerHTML = (data.grid || []).map(cell => {
+          const cls = cell.level > 0 ? `streak-cell l${cell.level}` : 'streak-cell';
+          const title = `${cell.date}: ${cell.count} solved`;
+          return `<div class="${cls}" title="${title}"></div>`;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Error loading streak grid:', err);
+    if (grid) {
+      grid.innerHTML = '<div class="empty-note">Could not load streak data from backend.</div>';
+    }
+  }
+}
+
+// READ: Load Dashboard metrics and live activity feed from PostgreSQL
+async function loadDashboard() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/dashboard?user_id=${userId}`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      const pSolvedEl = document.getElementById('stat-problems-solved');
+      if (pSolvedEl) pSolvedEl.textContent = data.solved_problems;
+
+      const tCountEl = document.getElementById('stat-topics-count');
+      if (tCountEl) tCountEl.textContent = data.total_topics;
+
+      const progEl = document.getElementById('stat-overall-progress');
+      if (progEl) progEl.textContent = `${data.progress}%`;
+
+      const tProbEl = document.getElementById('stat-total-problems');
+      if (tProbEl) tProbEl.textContent = data.total_problems;
+
+      // Update streak chip on dashboard topbar
+      const streakChip = document.getElementById('dashboard-streak-chip');
+      if (streakChip) {
+        const streak = data.current_streak || 0;
+        streakChip.textContent = `🔥 ${streak}-day streak — ${streak > 0 ? 'keep it going' : 'solve a problem today'}`;
+      }
+
+      // Populate topics summary panel
+      const topicsSummaryEl = document.getElementById('dashboard-topics-summary');
+      if (topicsSummaryEl) {
+        const topics = data.topics_summary || [];
+        if (topics.length === 0) {
+          topicsSummaryEl.innerHTML = '<div class="empty-note">No topics yet. Create one in DSA Tracker!</div>';
+        } else {
+          topicsSummaryEl.innerHTML = topics.slice(0, 4).map(t => `
+            <div style="margin-bottom:8px;padding:8px 10px;background:#0d1117;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;gap:10px;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(t.topic_name)}</span>
+              <div style="width:100px;height:6px;background:#1a2029;border-radius:3px;overflow:hidden;">
+                <div style="width:${t.percentage}%;height:100%;background:${t.percentage === 100 ? 'var(--green)' : 'var(--blue)'};"></div>
+              </div>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);width:50px;text-align:right;">${t.solved_count}/${t.total_problems}</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    // Load live activity feed
+    const actRes = await fetch(`http://127.0.0.1:5000/api/activity?user_id=${userId}`, { credentials: 'include' });
+    if (actRes.ok) {
+      const activities = await actRes.json();
+      const actContainer = document.getElementById('recent-activity-container');
+      if (actContainer) {
+        if (activities.length === 0) {
+          actContainer.innerHTML = '<div class="empty-note">No recent activity logged yet. Mark problems complete to see activity!</div>';
+        } else {
+          actContainer.innerHTML = activities.map(a => {
+            const dateStr = a.completed_at ? new Date(a.completed_at).toLocaleDateString([], {month:'short', day:'numeric'}) : 'Recently';
+            return `
+              <div class="log-entry">
+                <div class="log-time">${dateStr}</div>
+                <div class="log-dot-col"><div class="log-dot"></div><div class="log-line"></div></div>
+                <div>
+                  <div class="log-text">Solved "${escapeHtml(a.problem_name)}"</div>
+                  <div class="log-sub">${escapeHtml(a.topic_name)} · ${escapeHtml(a.difficulty)}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // Refresh goals, weekly chart, and streak grid
+    loadGoals();
+    loadWeeklyActivity();
+    loadStreakGrid();
+  } catch (err) {
+    console.error('Dashboard loading error:', err);
+  }
+}
+
+// READ: Load DSA Topics and Problems from PostgreSQL
+async function loadDSA() {
+  const userId = localStorage.getItem('user_id');
+  const container = document.getElementById('dsa-topics-container');
+  if (!container) return;
+
+  if (!userId) {
+    container.innerHTML = '<div class="empty-note">Please login first.</div>';
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/topics?user_id=${userId}`);
+    const topics = await response.json();
+
+    container.innerHTML = '';
+
+    if (topics.length === 0) {
+      container.innerHTML = `
+        <div class="empty-note">
+          No DSA topics found. Click "+ new topic" above to create your first topic!
+        </div>
+      `;
+      return;
+    }
+
+    let totalSolvedAllTopics = 0;
+    for (const topic of topics) {
+      const problemResponse = await fetch(`http://127.0.0.1:5000/api/topics/${topic.id}/problems`);
+      const problems = await problemResponse.json();
+
+      const solved = problems.filter(p => p.is_solved).length;
+      totalSolvedAllTopics += solved;
+      const total = problems.length;
+      const percentage = total === 0 ? 0 : Math.round((solved / total) * 100);
+
+      const block = document.createElement('div');
+      block.className = 'topic-block open';
+
+      block.innerHTML = `
+        <div class="topic-row" onclick="toggleTopic(this)">
+          <span class="topic-caret">▶</span>
+          <div class="topic-status">
+            ${percentage === 100 ? '✅' : percentage > 0 ? '🟡' : '⬜'}
+          </div>
+          <div class="topic-name">${escapeHtml(topic.topic_name)}</div>
+          <div class="topic-track">
+            <div class="topic-fill"
+                 style="width:${percentage}%;
+                 background:${percentage === 100 ? 'var(--green)' : percentage > 0 ? 'var(--yellow)' : 'var(--text-faint)'}">
+            </div>
+          </div>
+          <div class="topic-pct">${percentage}%</div>
+          <div class="topic-count">${solved}/${total}</div>
+          <div class="topic-action" style="display:flex;gap:6px;justify-content:flex-end;">
+            <button class="btn-mini" style="color:var(--red);" onclick="event.stopPropagation(); deleteTopicDB(${topic.id})" title="Delete this topic (DBMS DELETE)">Delete</button>
+          </div>
+        </div>
+
+        <div class="question-list">
+          ${problems.length === 0 ? '<div class="empty-note" style="margin:4px 0 8px;">No problems added yet. Click "+ add question" below!</div>' : ''}
+          ${problems.map(problem => `
+            <div class="question-row q-row ${problem.is_solved ? 'solved' : ''}">
+              <div class="q-checkbox ${problem.is_solved ? 'checked' : ''}"
+                   onclick="toggleQuestionDB(this, ${problem.id})">
+                ${problem.is_solved ? '✓' : ''}
+              </div>
+              <div class="q-name">${escapeHtml(problem.problem_name)}</div>
+              <div class="q-diff ${(problem.difficulty || 'Easy').toLowerCase()}">
+                ${escapeHtml(problem.difficulty || 'Easy')}
+              </div>
+              <a href="${problem.leetcode_link || problem.leetcode_url || '#'}"
+                 class="q-link"
+                 target="_blank"
+                 onclick="event.stopPropagation()">
+                LeetCode ↗
+              </a>
+              <button class="btn-mini" style="color:var(--red);padding:2px 6px;margin-left:6px;" onclick="event.stopPropagation(); deleteProblemDB(${problem.id})" title="Delete problem (DBMS DELETE)">✕</button>
+            </div>
+          `).join('')}
+          <div class="add-question-row">
+            <button class="add-q-btn" onclick="addNewQuestionPrompt(${topic.id})">+ add question to this topic</button>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(block);
+    }
+
+    const chipEl = document.getElementById('dsa-solved-count-chip');
+    if (chipEl) chipEl.textContent = `${totalSolvedAllTopics} problems solved total`;
+
+  } catch (error) {
+    console.error('DSA loading error:', error);
+    container.innerHTML = '<div class="empty-note">Unable to load DSA data from database.</div>';
+  }
+}
+
+// UPDATE: Toggle Problem status (PostgreSQL UPDATE + INSERT/DELETE activity)
+async function toggleQuestionDB(box, problemId) {
+  const userId = localStorage.getItem('user_id');
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/problems/${problemId}/complete`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId ? parseInt(userId) : undefined })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      alert(data.message || 'Could not update problem');
+      return;
+    }
+
+    // Refresh view from live database
+    loadDSA();
+    loadDashboard();
+  } catch (error) {
+    console.error('Problem update error:', error);
+    alert('Could not connect to the backend server.');
+  }
+}
+
+// CREATE: Add Topic (PostgreSQL INSERT)
+async function addNewTopicPrompt() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const topicName = prompt('Enter new topic name (e.g., Dynamic Programming):');
+  if (!topicName || !topicName.trim()) return;
+
+  try {
+    const res = await fetch('http://127.0.0.1:5000/api/topics', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: parseInt(userId), topic_name: topicName.trim() })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      loadDSA();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Failed to create topic');
+    }
+  } catch (err) {
+    console.error('Error creating topic:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// CREATE: Add Problem (PostgreSQL INSERT)
+async function addNewQuestionPrompt(topicId) {
+  const userId = localStorage.getItem('user_id');
+  const problemName = prompt('Enter problem name (e.g., Climbing Stairs):');
+  if (!problemName || !problemName.trim()) return;
+
+  const difficulty = prompt('Enter difficulty (Easy / Medium / Hard):', 'Easy') || 'Easy';
+  const leetcodeLink = prompt('Enter LeetCode URL (optional):', 'https://leetcode.com/') || '';
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/topics/${topicId}/problems`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId ? parseInt(userId) : undefined,
+        problem_name: problemName.trim(),
+        difficulty: difficulty.trim(),
+        leetcode_link: leetcodeLink.trim()
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      loadDSA();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Failed to add problem');
+    }
+  } catch (err) {
+    console.error('Error adding problem:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// DELETE: Delete Topic (PostgreSQL DELETE with CASCADE)
+async function deleteTopicDB(topicId) {
+  if (!confirm('Are you sure you want to delete this topic and all its problems from PostgreSQL?')) return;
+
+  const userId = localStorage.getItem('user_id');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/topics/${topicId}?user_id=${userId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      loadDSA();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Failed to delete topic');
+    }
+  } catch (err) {
+    console.error('Error deleting topic:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// DELETE: Delete Problem (PostgreSQL DELETE)
+async function deleteProblemDB(problemId) {
+  if (!confirm('Are you sure you want to delete this problem from PostgreSQL?')) return;
+
+  const userId = localStorage.getItem('user_id');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/problems/${problemId}?user_id=${userId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      loadDSA();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Failed to delete problem');
+    }
+  } catch (err) {
+    console.error('Error deleting problem:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// ============================================================================
+// PROJECTS CRUD LOGIC (PostgreSQL Backend)
+// ============================================================================
+
+let userProjects = [];
+
+async function loadProjects() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) return;
+
+  const grid = document.getElementById('projects-grid-container');
+  const countIndicator = document.getElementById('projects-count-indicator');
+  const navBadge = document.getElementById('nav-projects-badge');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/projects?user_id=${userId}`);
+    if (res.ok) {
+      userProjects = await res.json();
+
+      if (navBadge) {
+        navBadge.textContent = userProjects.length;
+      }
+      if (countIndicator) {
+        countIndicator.textContent = `${userProjects.length} ${userProjects.length === 1 ? 'project' : 'projects'} in PostgreSQL`;
+      }
+
+      renderProjectsGrid(userProjects);
+    } else {
+      console.error('Failed to load projects');
+    }
+  } catch (err) {
+    console.error('Error loading projects:', err);
+    if (grid) {
+      grid.innerHTML = `
+        <div class="empty-note" style="grid-column:1/-1;">Could not load projects from backend. Make sure Flask is running.</div>
+        <div class="add-project-card" onclick="openNewProjectModal()" style="cursor:pointer;">+ add project</div>
+      `;
+    }
+  }
+}
+
+function renderProjectsGrid(projects) {
+  const grid = document.getElementById('projects-grid-container');
+  if (!grid) return;
+
+  if (projects.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-note" style="grid-column:1/-1;padding:24px;text-align:center;">
+        No projects yet. Click "+ new project" above or "+ add project" below to create your first project!
+      </div>
+      <div class="add-project-card" onclick="openNewProjectModal()" style="cursor:pointer;">+ add project</div>
+    `;
+    return;
+  }
+
+  let html = '';
+  projects.forEach(p => {
+    const status = (p.status || 'in progress').toLowerCase();
+    let pillClass = 'active';
+    let pillText = 'in progress';
+    if (status === 'completed') {
+      pillClass = 'done';
+      pillText = 'completed';
+    } else if (status === 'planned') {
+      pillClass = 'planned';
+      pillText = 'planned';
+    }
+
+    const tags = (p.tech_stack || '')
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    const tagsHtml = tags.length > 0
+      ? tags.map(t => `<div class="tech-tag">${escapeHtml(t)}</div>`).join('')
+      : '<div class="tech-tag" style="opacity:0.5;">No tags</div>';
+
+    const progress = Math.max(0, Math.min(100, parseInt(p.progress) || 0));
+
+    html += `
+      <div class="project-card" data-id="${p.id}">
+        <div class="project-top">
+          <div class="project-name">${escapeHtml(p.title)}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="status-pill ${pillClass}">${pillText}</div>
+            <button onclick="openEditProjectModal(${p.id})" title="Edit Project" style="background:transparent;border:none;color:var(--yellow);cursor:pointer;font-size:12px;padding:2px 4px;opacity:0.85;">✏️</button>
+            <button onclick="handleDeleteProject(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}')" title="Delete Project" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 4px;opacity:0.85;">🗑️</button>
+          </div>
+        </div>
+        <div class="project-desc">${escapeHtml(p.description || '')}</div>
+        <div class="tech-tags">${tagsHtml}</div>
+        <div class="progress-track" title="Progress: ${progress}%">
+          <div class="progress-fill" style="width:${progress}%"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `<div class="add-project-card" onclick="openNewProjectModal()" style="cursor:pointer;">+ add project</div>`;
+  grid.innerHTML = html;
+}
+
+function openNewProjectModal() {
+  document.getElementById('modal-project-id').value = '';
+  document.getElementById('modal-project-title').value = '';
+  document.getElementById('modal-project-desc').value = '';
+  document.getElementById('modal-project-tech').value = '';
+  document.getElementById('modal-project-status').value = 'in progress';
+  document.getElementById('modal-project-progress').value = 50;
+
+  document.getElementById('modal-project-heading').textContent = 'New Project';
+  document.getElementById('modal-project-sub').textContent = '// create project in postgresql';
+  document.getElementById('modal-project-title-path').textContent = '.create()';
+  document.getElementById('modal-project-submit-btn').textContent = 'Create Project';
+
+  document.getElementById('project-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-project-title').focus(), 50);
+}
+
+function openEditProjectModal(projectId) {
+  const p = userProjects.find(item => item.id === projectId);
+  if (!p) {
+    alert('Project not found');
+    return;
+  }
+
+  document.getElementById('modal-project-id').value = p.id;
+  document.getElementById('modal-project-title').value = p.title || '';
+  document.getElementById('modal-project-desc').value = p.description || '';
+  document.getElementById('modal-project-tech').value = p.tech_stack || '';
+  document.getElementById('modal-project-status').value = (p.status || 'in progress').toLowerCase();
+  document.getElementById('modal-project-progress').value = p.progress !== undefined ? p.progress : 50;
+
+  document.getElementById('modal-project-heading').textContent = 'Edit Project';
+  document.getElementById('modal-project-sub').textContent = `// update project #${p.id} in postgresql`;
+  document.getElementById('modal-project-title-path').textContent = '.update()';
+  document.getElementById('modal-project-submit-btn').textContent = 'Save Changes';
+
+  document.getElementById('project-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-project-title').focus(), 50);
+}
+
+function closeProjectModal() {
+  document.getElementById('project-modal').style.display = 'none';
+}
+
+function handleModalStatusChange() {
+  const status = document.getElementById('modal-project-status').value;
+  const progInput = document.getElementById('modal-project-progress');
+  if (status === 'completed') {
+    progInput.value = 100;
+  } else if (status === 'planned' && progInput.value > 0) {
+    progInput.value = 0;
+  } else if (status === 'in progress' && (progInput.value == 0 || progInput.value == 100)) {
+    progInput.value = 50;
+  }
+}
+
+async function handleSaveProject() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const projectId = document.getElementById('modal-project-id').value;
+  const title = document.getElementById('modal-project-title').value.trim();
+  const desc = document.getElementById('modal-project-desc').value.trim();
+  const tech = document.getElementById('modal-project-tech').value.trim();
+  const status = document.getElementById('modal-project-status').value;
+  let progress = parseInt(document.getElementById('modal-project-progress').value);
+  if (isNaN(progress)) progress = (status === 'completed' ? 100 : (status === 'planned' ? 0 : 50));
+  progress = Math.max(0, Math.min(100, progress));
+
+  if (!title) {
+    alert('Please enter a project title.');
+    document.getElementById('modal-project-title').focus();
+    return;
+  }
+
+  const payload = {
+    user_id: parseInt(userId),
+    title: title,
+    description: desc,
+    tech_stack: tech,
+    status: status,
+    progress: progress
+  };
+
+  const isEdit = !!projectId;
+  const url = isEdit ? `http://127.0.0.1:5000/api/projects/${projectId}` : 'http://127.0.0.1:5000/api/projects';
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      closeProjectModal();
+      await loadProjects();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Error saving project');
+    }
+  } catch (err) {
+    console.error('Error saving project:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+async function handleDeleteProject(projectId, projectTitle) {
+  if (!confirm(`Are you sure you want to delete "${projectTitle}" from PostgreSQL?`)) {
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/projects/${projectId}?user_id=${userId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      await loadProjects();
+      loadDashboard();
+    } else {
+      alert(data.message || 'Failed to delete project');
+    }
+  } catch (err) {
+    console.error('Error deleting project:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// ============================================================================
+// GOALS CRUD LOGIC (PostgreSQL Backend)
+// ============================================================================
+
+let userGoals = [];
+
+function focusGoalInput() {
+  const input = document.getElementById('goal-input');
+  if (input) {
+    input.focus();
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+async function loadGoals() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) return;
+
+  const listContainer = document.getElementById('goals-list-container');
+  const countIndicator = document.getElementById('goals-count-indicator');
+  const navBadge = document.getElementById('nav-goals-badge');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/goals?user_id=${userId}`);
+    if (res.ok) {
+      userGoals = await res.json();
+
+      if (navBadge) {
+        navBadge.textContent = userGoals.length;
+      }
+      if (countIndicator) {
+        countIndicator.textContent = `${userGoals.length} ${userGoals.length === 1 ? 'goal' : 'goals'} in PostgreSQL`;
+      }
+
+      renderGoalsList(userGoals);
+      renderDashboardGoals(userGoals);
+    } else {
+      console.error('Failed to load goals from backend');
+    }
+  } catch (err) {
+    console.error('Error loading goals:', err);
+    if (listContainer) {
+      listContainer.innerHTML = '<div class="empty-note">Could not load goals from backend. Make sure Flask is running.</div>';
+    }
+  }
+}
+
+function renderGoalsList(goals) {
+  const container = document.getElementById('goals-list-container');
+  if (!container) return;
+
+  if (goals.length === 0) {
+    container.innerHTML = `
+      <div class="empty-note" style="padding:20px;text-align:center;">
+        No goals found. Enter a goal above and click "Add Goal" to create your first goal in PostgreSQL!
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = goals.map(g => {
+    const current = Math.max(0, parseInt(g.current_count) || 0);
+    const target = Math.max(1, parseInt(g.target_count) || 1);
+    const pct = Math.min(100, Math.round((current / target) * 100));
+    const isCompleted = g.is_completed || current >= target;
+
+    return `
+      <div class="goal-card" id="goal-item-${g.id}">
+        <div class="goal-top">
+          <span class="goal-name" style="${isCompleted ? 'color:var(--text);' : ''}">${escapeHtml(g.title)}</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="goal-count">${current}/${target}</span>
+            ${current >= target ?
+              `<span style="background:#132018;border:1px solid #1e3a2a;color:var(--green);font-size:11px;border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono';">✓ Met</span>` :
+              `<button onclick="handleIncrementGoal(${g.id})" title="Increment Progress (+1)" style="background:#132018;border:1px solid #1e3a2a;color:var(--green);cursor:pointer;font-size:11px;border-radius:4px;padding:2px 8px;font-family:'JetBrains Mono';">+1</button>`
+            }
+            <button onclick="handleDeleteGoal(${g.id}, '${escapeHtml(g.title).replace(/'/g, "\\'")}')" title="Delete Goal from PostgreSQL" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 4px;opacity:0.85;">🗑️</button>
+          </div>
+        </div>
+        <div class="goal-track"><div class="goal-fill" style="width:${pct}%;"></div></div>
+        <div class="goal-meta" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>${escapeHtml(g.timeframe || 'this week')}</span>
+          <span style="color:${isCompleted ? 'var(--green)' : 'var(--text-faint)'};">${isCompleted ? '✓ Completed' : `${pct}% completed`}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDashboardGoals(goals) {
+  const container = document.getElementById('dashboard-goals-container');
+  if (!container) return;
+
+  if (goals.length === 0) {
+    container.innerHTML = '<div class="empty-note">No active goals yet. Add one in Weekly Goals!</div>';
+    return;
+  }
+
+  const displayGoals = goals.slice(0, 3);
+  container.innerHTML = displayGoals.map(g => {
+    const current = Math.max(0, parseInt(g.current_count) || 0);
+    const target = Math.max(1, parseInt(g.target_count) || 1);
+    const pct = Math.min(100, Math.round((current / target) * 100));
+    const isCompleted = g.is_completed || current >= target;
+
+    return `
+      <div class="goal-card">
+        <div class="goal-top">
+          <span class="goal-name">${escapeHtml(g.title)}</span>
+          <span class="goal-count">${current}/${target}</span>
+        </div>
+        <div class="goal-track"><div class="goal-fill" style="width:${pct}%;"></div></div>
+        <div class="goal-meta">${escapeHtml(g.timeframe || 'this week')} · ${isCompleted ? 'Completed' : `${pct}% done`}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleAddGoal() {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const input = document.getElementById('goal-input');
+  const errorEl = document.getElementById('goal-error-msg');
+  const btn = document.getElementById('btn-add-goal');
+
+  const title = input ? input.value.trim() : '';
+
+  // 1. Validation: check non-empty
+  if (!title) {
+    if (errorEl) {
+      errorEl.textContent = 'Please enter a goal description (e.g. "Solve 20 questions" or "Finish Trees topic").';
+      errorEl.style.display = 'block';
+    }
+    if (input) input.focus();
+    return;
+  }
+
+  if (errorEl) {
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+  }
+
+  // 2. Prevent duplicate clicks while in-flight
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+  }
+  if (input) input.disabled = true;
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/goals', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: parseInt(userId),
+        title: title
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // 3. Clear input field on success
+      if (input) {
+        input.value = '';
+      }
+      // 4. Update UI immediately
+      await loadGoals();
+      loadDashboard();
+    } else {
+      if (errorEl) {
+        errorEl.textContent = data.message || 'Failed to add goal';
+        errorEl.style.display = 'block';
+      } else {
+        alert(data.message || 'Failed to add goal');
+      }
+    }
+  } catch (err) {
+    console.error('Error adding goal:', err);
+    if (errorEl) {
+      errorEl.textContent = 'Failed to connect to backend server. Make sure Flask is running.';
+      errorEl.style.display = 'block';
+    } else {
+      alert('Failed to connect to backend server');
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Add Goal';
+    }
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
+  }
+}
+
+async function handleIncrementGoal(goalId) {
+  const userId = localStorage.getItem('user_id');
+  const goal = userGoals.find(g => g.id === goalId);
+  if (!goal) return;
+
+  const current = parseInt(goal.current_count) || 0;
+  const target = parseInt(goal.target_count) || 1;
+  if (current >= target) return;
+
+  const newCount = Math.min(target, current + 1);
+  const isCompleted = newCount >= target;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/goals/${goalId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId ? parseInt(userId) : undefined,
+        current_count: newCount,
+        is_completed: isCompleted
+      })
+    });
+
+    if (res.ok) {
+      await loadGoals();
+      loadDashboard();
+    } else {
+      const data = await res.json();
+      alert(data.message || 'Failed to update goal');
+    }
+  } catch (err) {
+    console.error('Error updating goal:', err);
+  }
+}
+
+async function handleDeleteGoal(goalId, goalTitle) {
+  if (!confirm(`Are you sure you want to delete goal "${goalTitle}" from PostgreSQL?`)) {
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/goals/${goalId}?user_id=${userId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+
+    if (res.ok) {
+      await loadGoals();
+      loadDashboard();
+    } else {
+      const data = await res.json();
+      alert(data.message || 'Failed to delete goal');
+    }
+  } catch (err) {
+    console.error('Error deleting goal:', err);
+    alert('Failed to connect to backend server');
+  }
+}
+
+// Auto-restore session on page refresh
+window.addEventListener('DOMContentLoaded', () => {
+  const userId = localStorage.getItem('user_id');
+  const userName = localStorage.getItem('user_name');
+  if (userId) {
+    updateUserInterface(userName);
+    enterApp();
+    loadDashboard();
+    loadDSA();
+    loadProjects();
+    loadGoals();
+  }
+});
+</script>
+
+</body>
+</html>

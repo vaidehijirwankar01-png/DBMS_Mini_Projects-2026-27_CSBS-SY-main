@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Management System | DBMS Mini Project</title>
+  <!-- Google Fonts: IBM Plex Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-title">The Royal Orchid</div>
+        <div class="brand-subtitle">Hotel Management System</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-link active" data-page="dashboard">
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="#bookings" class="nav-link" data-page="bookings">
+          <span class="nav-text">Bookings</span>
+        </a>
+        <a href="#rooms" class="nav-link" data-page="rooms">
+          <span class="nav-text">Rooms</span>
+        </a>
+        <a href="#customers" class="nav-link" data-page="customers">
+          <span class="nav-text">Customers</span>
+        </a>
+        <a href="#payments" class="nav-link" data-page="payments">
+          <span class="nav-text">Payments</span>
+        </a>
+        <a href="#employees" class="nav-link" data-page="employees">
+          <span class="nav-text">Employees</span>
+        </a>
+        <a href="#reports" class="nav-link" data-page="reports">
+          <span class="nav-text">SQL Reports</span>
+        </a>
+        <a href="#mongo-logs" class="nav-link" data-page="mongo-logs">
+          <span class="nav-text">MongoDB Logs</span>
+        </a>
+      </nav>
+
+      <!-- Staff Session Switcher -->
+      <div class="sidebar-footer">
+        <label for="current-user-select" class="sidebar-label">Logged in as:</label>
+        <select id="current-user-select" class="sidebar-select">
+          <!-- Filled dynamically by employee list -->
+          <option value="Priya Nair (Receptionist)">Priya Nair (Receptionist)</option>
+          <option value="Amitabh Sen (Receptionist)">Amitabh Sen (Receptionist)</option>
+          <option value="Rajesh Sharma (Manager)">Rajesh Sharma (Manager)</option>
+        </select>
+        <div class="db-badges">
+          <span class="badge-db badge-mysql">MySQL 8.0</span>
+          <span class="badge-db badge-mongo">MongoDB</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="page-header-info">
+          <h1 id="page-title" class="page-title">Dashboard Overview</h1>
+          <div id="page-subtitle" class="page-subtitle">Front Desk Operations & Performance Metrics</div>
+        </div>
+        <div class="top-bar-right">
+          <span id="current-datetime" class="system-time">--:-- --</span>
+          <button id="btn-quick-new-booking" class="btn btn-primary btn-sm">+ New Booking</button>
+          <button id="btn-stop-server" class="btn btn-danger btn-sm" onclick="stopServerFromUI()" title="Stop Node.js server">Stop Server</button>
+        </div>
+      </header>
+
+      <!-- Page Containers -->
+      <div class="content-body">
+
+        <!-- ================= DASHBOARD PAGE ================= -->
+        <section id="page-dashboard" class="page-section active">
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Room Inventory</div>
+              <div class="kpi-value" id="kpi-total-rooms">20</div>
+              <div class="kpi-sub" id="kpi-room-breakdown">Available: 11 | Occupied: 7 | Maint: 2</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Today's Activity</div>
+              <div class="kpi-value" id="kpi-today-activity">--</div>
+              <div class="kpi-sub" id="kpi-today-breakdown">Check-ins: 0 | Check-outs: 0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Revenue This Month</div>
+              <div class="kpi-value" id="kpi-month-revenue">₹0</div>
+              <div class="kpi-sub" id="kpi-total-revenue">All-Time Revenue: ₹0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Active Bookings</div>
+              <div class="kpi-value" id="kpi-active-bookings">--</div>
+              <div class="kpi-sub" id="kpi-bookings-breakdown">Checked-in: 0 | Booked: 0</div>
+            </div>
+          </div>
+
+          <!-- Charts & Recent Activity Grid -->
+          <div class="grid-2-col">
+            <!-- Room Inventory Occupancy Chart -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Room Occupancy by Category</h2>
+                <span class="card-tag">Real-time status</span>
+              </div>
+              <div class="card-body">
+                <div id="occupancy-chart" class="custom-bar-chart">
+                  <!-- Generated dynamically via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Bookings Table -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Recent Reservations</h2>
+                <a href="#bookings" class="card-link" onclick="navigate('bookings')">View all</a>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="data-table" id="table-recent-bookings">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Guest</th>
+                        <th>Room</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Injected via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= BOOKINGS PAGE ================= -->
+        <section id="page-bookings" class="page-section">
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h2 class="card-title">All Bookings</h2>
+                <p class="card-desc">Reservations managed via MySQL stored procedures & triggers</p>
+              </div>
+              <div class="header-actions">
+                <div class="filter-group">
+                  <label for="filter-booking-status" class="filter-label">Filter:</label>
+                  <select id="filter-booking-status" class="form-control form-control-sm">
+                    <option value="">All Statuses</option>
+                    <option value="Booked">Booked</option>
+                    <option value="Checked-in">Checked-in</option>
+                    <option value="Checked-out">Checked-out</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openNewBookingModal()">+ New Booking</button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="table-bookings">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Guest Name</th>
+                      <th>Room</th>
+                      <th>Dates</th>
+                      <th>Nights</th>
+                      <th>Charges</th>
+                      <th>Paid</th>
+                      <th>Due</th>
+                      <th>Status</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= ROOMS PAGE ================= -->
+        <section id="page-rooms" class="page-section">
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h2 class="card-title">Room Management</h2>
+                <p class="card-desc">Weak entity of Hotel with composite primary key (hotel_id, room_no)</p>
+              </div>
+              <div class="header-actions">
+                <div class="filter-group">
+                  <label for="filter-room-type" class="filter-label">Type:</label>
+                  <select id="filter-room-type" class="form-control form-control-sm">
+                    <option value="">All Types</option>
+                    <option value="Single">Single</option>
+                    <option value="Double">Double</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="filter-room-status" class="filter-label">Status:</label>
+                  <select id="filter-room-status" class="form-control form-control-sm">
+                    <option value="">All Statuses</option>
+                    <option value="Available">Available</option>
+                    <option value="Occupied">Occupied</option>
+                    <option value="Maintenance">Maintenance</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openAddRoomModal()">+ Add Room</button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="table-rooms">
+                  <thead>
+                    <tr>
+                      <th>Room No</th>
+                      <th>Category</th>
+                      <th>Capacity</th>
+                      <th>Rate / Night</th>
+                      <th>Status</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= CUSTOMERS PAGE ================= -->
+        <section id="page-customers" class="page-section">
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h2 class="card-title">Customer Directory</h2>
+                <p class="card-desc">Guest profile repository with unique Email and 12-digit Aadhaar constraints</p>
+              </div>
+              <div class="header-actions">
+                <div class="search-box">
+                  <input type="text" id="customer-search-input" class="form-control form-control-sm" placeholder="Search by name, phone, Aadhaar...">
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openAddCustomerModal()">+ Add Customer</button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="table-customers">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Full Name</th>
+                      <th>Phone</th>
+                      <th>Email</th>
+                      <th>Aadhaar Number</th>
+                      <th>Address</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= PAYMENTS PAGE ================= -->
+        <section id="page-payments" class="page-section">
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h2 class="card-title">Payment Transactions</h2>
+                <p class="card-desc">Payments validated by sp_add_payment (overpayment prevention logic)</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddPaymentModal()">+ Record Payment</button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="table-payments">
+                  <thead>
+                    <tr>
+                      <th>Payment ID</th>
+                      <th>Booking ID</th>
+                      <th>Guest Name</th>
+                      <th>Room</th>
+                      <th>Amount</th>
+                      <th>Payment Mode</th>
+                      <th>Date</th>
+                      <th>Transaction Ref</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= EMPLOYEES PAGE ================= -->
+        <section id="page-employees" class="page-section">
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h2 class="card-title">Hotel Staff & Skills</h2>
+                <p class="card-desc">Staff roster demonstrating 1:N multivalued attribute table employee_skill</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openAddEmployeeModal()">+ Add Staff</button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="table-employees">
+                  <thead>
+                    <tr>
+                      <th>Emp ID</th>
+                      <th>Name</th>
+                      <th>Role</th>
+                      <th>Phone</th>
+                      <th>Address</th>
+                      <th>Specialized Skills</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= SQL REPORTS PAGE ================= -->
+        <section id="page-reports" class="page-section">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h2 class="card-title">SQL Implementation & Viva Reports</h2>
+              <p class="card-desc">Live execution of 10 analytical queries demonstrating GROUP BY, JOINs, Views, Having, and Subqueries</p>
+            </div>
+            <div class="card-body">
+              <div class="reports-nav-pills" id="reports-nav-pills">
+                <!-- Report buttons injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Report Details Card -->
+          <div class="card" id="active-report-container">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title" id="report-title">Loading report...</h3>
+                <div class="report-meta">
+                  <span class="report-concept" id="report-concept">Concepts: --</span>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="refreshCurrentReport()">Refresh Query</button>
+            </div>
+            <div class="card-body">
+              <p class="report-description" id="report-description"></p>
+              <div class="sql-box">
+                <div class="sql-header">SQL QUERY</div>
+                <pre class="sql-code"><code id="report-sql"></code></pre>
+              </div>
+              <div class="table-responsive mt-3">
+                <table class="data-table" id="table-report-results">
+                  <thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= MONGODB LOGS & FEEDBACK ================= -->
+        <section id="page-mongo-logs" class="page-section">
+          <!-- Architecture Note -->
+          <div class="info-banner mb-4">
+            <div class="info-title">Why Dual Databases? (MySQL + MongoDB)</div>
+            <div class="info-text">
+              <strong>MySQL</strong> manages the core relational model with ACID transactions, foreign keys, and strict relational schemas (Hotels, Rooms, Bookings, Payments).<br>
+              <strong>MongoDB</strong> handles unstructured, append-heavy audit trails (<code>activity_logs</code>) and guest reviews (<code>feedback</code>) with dynamic document structures and rapid timeline queries.
+            </div>
+          </div>
+
+          <div class="tabs-header">
+            <button class="tab-btn active" data-tab="tab-activity-logs">Activity Audit Logs (15+)</button>
+            <button class="tab-btn" data-tab="tab-feedback">Guest Feedback & Reviews</button>
+          </div>
+
+          <!-- Tab 1: Activity Logs -->
+          <div id="tab-activity-logs" class="tab-content active">
+            <div class="card">
+              <div class="card-header flex-between">
+                <div>
+                  <h3 class="card-title">System Activity Logs</h3>
+                  <p class="card-desc">Collection: <code>hotel_logs.activity_logs</code> (Indexed on timestamp)</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="loadActivityLogs()">Refresh Logs</button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="data-table" id="table-mongo-logs">
+                    <thead>
+                      <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Entity ID</th>
+                        <th>Performed By</th>
+                        <th>Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Injected via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Feedback -->
+          <div id="tab-feedback" class="tab-content">
+            <div class="grid-2-col">
+              <!-- Submit Feedback Card -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Submit Guest Feedback</h3>
+                  <p class="card-desc">Stored in MongoDB <code>feedback</code> collection</p>
+                </div>
+                <div class="card-body">
+                  <form id="form-submit-feedback">
+                    <div class="form-group mb-3">
+                      <label for="fb-booking-select" class="form-label">Booking / Guest</label>
+                      <select id="fb-booking-select" class="form-control">
+                        <option value="">-- Select Completed or Checked-in Booking --</option>
+                      </select>
+                    </div>
+                    <div class="form-group mb-3">
+                      <label for="fb-rating" class="form-label">Rating (1 to 5 Stars)</label>
+                      <select id="fb-rating" class="form-control" required>
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Very Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Terrible</option>
+                      </select>
+                    </div>
+                    <div class="form-group mb-3">
+                      <label for="fb-comment" class="form-label">Comments & Review</label>
+                      <textarea id="fb-comment" rows="4" class="form-control" placeholder="Share your experience during your stay..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Save Feedback to MongoDB</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Feedback List Card -->
+              <div class="card">
+                <div class="card-header flex-between">
+                  <h3 class="card-title">Guest Reviews</h3>
+                  <button class="btn btn-secondary btn-sm" onclick="loadFeedbackList()">Refresh</button>
+                </div>
+                <div class="card-body p-0">
+                  <div class="feedback-feed" id="feedback-feed">
+                    <!-- Injected via JS -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. NEW BOOKING MODAL (Step-by-step Flow) -->
+  <div id="modal-new-booking" class="modal-overlay">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">New Guest Reservation</h3>
+        <button class="modal-close" onclick="closeModal('modal-new-booking')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-new-booking">
+          <!-- Step 1: Dates & Capacity Selection -->
+          <div class="booking-wizard-step">
+            <h4 class="step-title">1. Search Available Rooms</h4>
+            <div class="form-row-4">
+              <div class="form-group">
+                <label for="nb-checkin" class="form-label">Check-in Date *</label>
+                <input type="date" id="nb-checkin" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="nb-checkout" class="form-label">Check-out Date *</label>
+                <input type="date" id="nb-checkout" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="nb-guests" class="form-label">Guests *</label>
+                <input type="number" id="nb-guests" class="form-control" min="1" max="6" value="1" required>
+              </div>
+              <div class="form-group">
+                <label for="nb-type" class="form-label">Room Type</label>
+                <select id="nb-type" class="form-control">
+                  <option value="">Any Category</option>
+                  <option value="Single">Single</option>
+                  <option value="Double">Double</option>
+                  <option value="Deluxe">Deluxe</option>
+                  <option value="Suite">Suite</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" id="btn-find-rooms" class="btn btn-secondary btn-sm mt-2" onclick="findAvailableRooms()">Search Available Rooms</button>
+          </div>
+
+          <!-- Room Selection Container -->
+          <div class="booking-wizard-step mt-3">
+            <h4 class="step-title">2. Select an Available Room *</h4>
+            <div id="available-rooms-container" class="room-cards-grid">
+              <div class="empty-hint">Set dates and click "Search Available Rooms" above.</div>
+            </div>
+            <input type="hidden" id="nb-selected-room" required>
+          </div>
+
+          <!-- Step 2: Customer Selection -->
+          <div class="booking-wizard-step mt-3">
+            <div class="flex-between">
+              <h4 class="step-title">3. Guest Details *</h4>
+              <button type="button" class="btn btn-link btn-sm" onclick="toggleQuickCustomerForm()">+ Register New Customer</button>
+            </div>
+            <div id="quick-customer-section" class="quick-form-box d-none mb-3">
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label class="form-label">Name *</label>
+                  <input type="text" id="qc-name" class="form-control form-control-sm" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phone *</label>
+                  <input type="text" id="qc-phone" class="form-control form-control-sm" placeholder="10-digit phone">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email *</label>
+                  <input type="email" id="qc-email" class="form-control form-control-sm" placeholder="Email address">
+                </div>
+              </div>
+              <div class="form-row-2 mt-2">
+                <div class="form-group">
+                  <label class="form-label">Aadhaar (12 digits) *</label>
+                  <input type="text" id="qc-aadhar" class="form-control form-control-sm" placeholder="12-digit Aadhaar">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Address *</label>
+                  <input type="text" id="qc-address" class="form-control form-control-sm" placeholder="City, State">
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="saveQuickCustomer()">Save & Select Guest</button>
+            </div>
+
+            <div class="form-group">
+              <label for="nb-customer" class="form-label">Select Registered Guest *</label>
+              <select id="nb-customer" class="form-control" required>
+                <option value="">-- Choose Guest --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Step 3: Receptionist Handling -->
+          <div class="booking-wizard-step mt-3">
+            <h4 class="step-title">4. Front-Desk Staff Assignment</h4>
+            <div class="form-group">
+              <label for="nb-receptionist" class="form-label">Assigned Receptionist *</label>
+              <select id="nb-receptionist" class="form-control" required>
+                <!-- Populated via employees -->
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-booking')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Confirm & Create Reservation</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. BILLING & INVOICE MODAL -->
+  <div id="modal-bill" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Guest Folio & Bill Summary</h3>
+        <button class="modal-close" onclick="closeModal('modal-bill')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="bill-details-content">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+      <div class="modal-footer flex-between">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-bill')">Close</button>
+        <button type="button" id="btn-bill-pay" class="btn btn-primary" onclick="proceedToPaymentFromBill()">Make Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ADD PAYMENT MODAL -->
+  <div id="modal-payment" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Record Guest Payment</h3>
+        <button class="modal-close" onclick="closeModal('modal-payment')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-record-payment">
+          <div class="form-group mb-3">
+            <label for="pay-booking-select" class="form-label">Select Active Booking *</label>
+            <select id="pay-booking-select" class="form-control" required onchange="onPaymentBookingChange()">
+              <option value="">-- Choose Booking --</option>
+            </select>
+          </div>
+          <div class="bill-summary-strip mb-3" id="pay-bill-strip" style="display:none;">
+            <div>Total Charges: <strong id="pay-info-charges">₹0</strong></div>
+            <div>Already Paid: <strong id="pay-info-paid">₹0</strong></div>
+            <div>Outstanding Due: <strong id="pay-info-due" class="text-danger">₹0</strong></div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="pay-amount" class="form-label">Payment Amount (₹) *</label>
+            <input type="number" step="0.01" id="pay-amount" class="form-control" required>
+            <small class="form-text">Protected by MySQL <code>sp_add_payment</code> against overpayment.</small>
+          </div>
+          <div class="form-group mb-3">
+            <label for="pay-mode" class="form-label">Payment Mode *</label>
+            <select id="pay-mode" class="form-control" required>
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Card">Card</option>
+              <option value="Net Banking">Net Banking</option>
+            </select>
+          </div>
+          <div class="form-group mb-3">
+            <label for="pay-txn-ref" class="form-label">Transaction Reference (Optional)</label>
+            <input type="text" id="pay-txn-ref" class="form-control" placeholder="Leave blank to auto-generate">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-payment')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Process Payment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ADD / EDIT ROOM MODAL -->
+  <div id="modal-room" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="room-modal-title">Add Room</h3>
+        <button class="modal-close" onclick="closeModal('modal-room')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-room">
+          <input type="hidden" id="room-is-edit" value="0">
+          <div class="form-row-2 mb-3">
+            <div class="form-group">
+              <label for="room-no" class="form-label">Room Number *</label>
+              <input type="text" id="room-no" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="room-type-input" class="form-label">Room Type *</label>
+              <select id="room-type-input" class="form-control" required>
+                <option value="Single">Single</option>
+                <option value="Double">Double</option>
+                <option value="Deluxe">Deluxe</option>
+                <option value="Suite">Suite</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-2 mb-3">
+            <div class="form-group">
+              <label for="room-price" class="form-label">Price Per Night (₹) *</label>
+              <input type="number" step="0.01" id="room-price" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="room-capacity" class="form-label">Capacity (Guests) *</label>
+              <input type="number" id="room-capacity" class="form-control" min="1" max="10" required>
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="room-availability" class="form-label">Availability Status *</label>
+            <select id="room-availability" class="form-control" required>
+              <option value="Available">Available</option>
+              <option value="Occupied">Occupied</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-room')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-room">Save Room</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. ADD / EDIT CUSTOMER MODAL -->
+  <div id="modal-customer" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="cust-modal-title">Register Customer</h3>
+        <button class="modal-close" onclick="closeModal('modal-customer')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-customer">
+          <input type="hidden" id="cust-id-input" value="">
+          <div class="form-group mb-3">
+            <label for="cust-name-input" class="form-label">Full Name *</label>
+            <input type="text" id="cust-name-input" class="form-control" required>
+          </div>
+          <div class="form-row-2 mb-3">
+            <div class="form-group">
+              <label for="cust-phone-input" class="form-label">Phone Number *</label>
+              <input type="text" id="cust-phone-input" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="cust-email-input" class="form-label">Email Address *</label>
+              <input type="email" id="cust-email-input" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="cust-aadhar-input" class="form-label">Aadhaar Number (12 digits) *</label>
+            <input type="text" id="cust-aadhar-input" class="form-control" maxlength="12" pattern="\d{12}" placeholder="e.g. 123456789012" required>
+          </div>
+          <div class="form-group mb-3">
+            <label for="cust-address-input" class="form-label">Permanent Address *</label>
+            <input type="text" id="cust-address-input" class="form-control" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-customer')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-customer">Save Customer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ADD / EDIT EMPLOYEE MODAL -->
+  <div id="modal-employee" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="emp-modal-title">Add Staff Member</h3>
+        <button class="modal-close" onclick="closeModal('modal-employee')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-employee">
+          <input type="hidden" id="emp-id-input" value="">
+          <div class="form-group mb-3">
+            <label for="emp-name-input" class="form-label">Full Name *</label>
+            <input type="text" id="emp-name-input" class="form-control" required>
+          </div>
+          <div class="form-row-2 mb-3">
+            <div class="form-group">
+              <label for="emp-phone-input" class="form-label">Phone Number *</label>
+              <input type="text" id="emp-phone-input" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="emp-role-input" class="form-label">Role *</label>
+              <select id="emp-role-input" class="form-control" required>
+                <option value="Receptionist">Receptionist</option>
+                <option value="Manager">Manager</option>
+                <option value="Housekeeping">Housekeeping</option>
+                <option value="Chef">Chef</option>
+                <option value="Security">Security</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="emp-address-input" class="form-label">Address *</label>
+            <input type="text" id="emp-address-input" class="form-control" required>
+          </div>
+          <div class="form-group mb-3">
+            <label for="emp-skills-input" class="form-label">Skills (comma-separated)</label>
+            <input type="text" id="emp-skills-input" class="form-control" placeholder="e.g. Front Desk Operations, Guest Relations, English">
+            <small class="form-text">Stored in <code>employee_skill</code> multivalued table.</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-employee')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-emp">Save Staff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

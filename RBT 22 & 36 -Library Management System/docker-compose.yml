@@ -1,0 +1,37 @@
+# One command start:  cp .env.example .env  (edit passwords)  then  docker compose up --build
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-LibraryDB}
+      MYSQL_USER: ${DB_USER:-library_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./schema/mysql.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./schema/mysql_extras.sql:/docker-entrypoint-initdb.d/02-extras.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-rootpass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: mysql
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: sh -c "python manage.py seed && gunicorn -w 3 -b 0.0.0.0:8000 wsgi:app"
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+volumes:
+  dbdata:

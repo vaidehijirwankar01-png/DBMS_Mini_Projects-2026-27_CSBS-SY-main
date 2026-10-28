@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<div class="head"><div><h1>📊 Reports</h1><p class="mut">Live results of key SQL queries — views, joins, subqueries, HAVING and stored functions</p></div></div>
+{% for t, tag, sql, rows in data %}
+<div class="card tbl sect"><div class="chh pad"><h3>{{ t }}</h3><span class="tag">{{ tag }}</span></div>
+<details class="sqlbox"><summary>Show SQL</summary><pre>{{ sql }}</pre></details>
+{% if rows %}<table><thead><tr>{% for c in rows[0].keys() %}<th>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr>{% for v in r.values() %}<td>{{ v if v is not none else '—' }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
+{% else %}<p class="empty">No rows returned</p>{% endif %}</div>
+{% endfor %}{% endblock %}

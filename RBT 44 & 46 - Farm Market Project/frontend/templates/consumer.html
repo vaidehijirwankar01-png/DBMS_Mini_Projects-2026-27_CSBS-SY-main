@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Fresh produce</h2>
+<form method="get">
+  Category:
+  <select name="category" onchange="this.form.submit()">
+    <option value="">All</option>
+    {% for c in categories %}<option {% if c.category == selected %}selected{% endif %}>{{ c.category }}</option>{% endfor %}
+  </select>
+</form>
+
+<form method="post" action="{{ url_for('consumer_order') }}">
+<table>
+  <tr><th>Product</th><th>Farmer</th><th>Category</th><th>Price</th><th>Available</th><th>Order quantity</th></tr>
+  {% for p in products %}
+  <tr>
+    <td>{{ p.name }}</td><td>{{ p.farmer_name }}</td><td>{{ p.category }}</td>
+    <td>Rs {{ p.price }} / {{ p.unit }}</td><td>{{ p.quantity }} {{ p.unit }}</td>
+    <td><input type="number" step="0.01" min="0" max="{{ p.quantity }}" name="qty_{{ p.product_id }}"> {{ p.unit }}</td>
+  </tr>
+  {% else %}<tr><td colspan="6">No products available.</td></tr>
+  {% endfor %}
+</table>
+<p>Delivery address: <input name="delivery_address" size="50" value="{{ address }}" required></p>
+<button>Place Order</button>
+</form>
+{% endblock %}

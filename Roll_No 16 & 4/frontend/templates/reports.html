@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}SQL JOIN Reports — College Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">SQL JOIN Operations &amp; Analytical Reports</h3>
+        <p class="text-muted small mb-0">Interactive demonstration of INNER, LEFT, RIGHT, CROSS, SELF, and Multi-Table SQL Joins</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" onclick="copySql('activeSqlQuery')">
+            <i class="bi bi-clipboard me-1"></i> Copy Current Query
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Navigation: Report Selector -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <span class="fw-bold"><i class="bi bi-list-check me-2 text-primary"></i> Select Demonstration Query</span>
+            </div>
+            <div class="list-group list-group-flush small">
+                {% for key, val in report_options.items() %}
+                <a href="{{ url_for('reports', report_id=key) }}" class="list-group-item list-group-item-action py-3 {% if report_id == key %}active fw-semibold{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <span class="text-truncate">{{ val.title }}</span>
+                        {% if 'INNER' in val.title %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-primary{% endif %}">INNER</span>
+                        {% elif 'LEFT' in val.title %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-info{% endif %}">LEFT</span>
+                        {% elif 'RIGHT' in val.title %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-warning text-dark{% endif %}">RIGHT</span>
+                        {% elif 'CROSS' in val.title %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-secondary{% endif %}">CROSS</span>
+                        {% elif 'SELF' in val.title %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-dark{% endif %}">SELF</span>
+                        {% else %}
+                            <span class="badge {% if report_id == key %}bg-light text-dark{% else %}bg-success{% endif %}">MULTI</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Content: Query details and Live Results -->
+    <div class="col-lg-8">
+        <!-- Report Header & Info -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark">{{ report_info.title }}</h5>
+                <div>
+                    <span class="badge bg-light text-secondary border">Rows: {{ rows|length }}</span>
+                    <span class="badge bg-light text-secondary border">Time: {{ execution_time }} ms</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">{{ report_info.description }}</p>
+
+                <!-- SQL Query Viewer Box -->
+                <div class="position-relative">
+                    <span class="sql-badge">MySQL 8.x Dialect</span>
+                    <pre class="sql-box mb-0" id="activeSqlQuery"><code>{{ report_info.sql }}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live MySQL Query Output Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table me-2 text-primary"></i> Live Output Table ({{ rows|length }} Rows Returned)</span>
+                <button class="btn btn-xs btn-outline-secondary py-0" onclick="window.print();" style="font-size: 0.8rem;">
+                    <i class="bi bi-printer me-1"></i> Print Report
+                </button>
+            </div>
+            <div class="table-responsive" style="max-height: 500px;">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="sticky-top">
+                        <tr>
+                            {% for col in columns %}
+                                <th>{{ col | replace('_', ' ') | title }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr>
+                            {% for col in columns %}
+                                <td>
+                                    {% if 'amount' in col or 'fee' in col or 'salary' in col or 'dues' in col %}
+                                        ₹{{ row[col] }}
+                                    {% elif 'percentage' in col %}
+                                        <span class="fw-bold">{{ row[col] }}%</span>
+                                    {% elif 'grade' in col %}
+                                        <span class="badge bg-primary">{{ row[col] }}</span>
+                                    {% elif 'status' in col %}
+                                        {% if row[col] in ['Paid', 'Clear'] %}
+                                            <span class="badge bg-success">{{ row[col] }}</span>
+                                        {% elif row[col] in ['Partial', 'Partially Due'] %}
+                                            <span class="badge bg-warning text-dark">{{ row[col] }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ row[col] }}</span>
+                                        {% endif %}
+                                    {% elif 'roll' in col or 'code' in col %}
+                                        <code>{{ row[col] }}</code>
+                                    {% else %}
+                                        {{ row[col] }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{{ columns|length or 1 }}" class="text-center py-4 text-muted">
+                                Query returned 0 rows.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<p>Phone: {% for p in phones %}{{ p.phone_number }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<h2>Add a product</h2>
+<form method="post" action="{{ url_for('farmer_add') }}" class="card">
+  Name <input name="name" required>
+  Category <input name="category" placeholder="Vegetable / Fruit / Grain" required>
+  Sold per <select name="unit"><option value="kg">kg</option><option value="g">gram</option></select>
+  Price per unit (Rs) <input type="number" step="0.01" min="0.01" name="price" required>
+  Stock available <input type="number" step="0.01" min="0" name="quantity" required>
+  <button>Add Product</button>
+</form>
+
+<h2>My products</h2>
+<table>
+  <tr><th>ID</th><th>Name</th><th>Category</th><th>Price / unit</th><th>Stock</th><th>Stock value</th><th>Update</th><th>Remove</th></tr>
+  {% for p in products %}
+  <tr>
+    <td>{{ p.product_id }}</td><td>{{ p.name }}</td><td>{{ p.category }}</td>
+    <td><input form="u{{ p.product_id }}" type="number" step="0.01" min="0.01" name="price" value="{{ p.price }}"> / {{ p.unit }}</td>
+    <td><input form="u{{ p.product_id }}" type="number" step="0.01" min="0" name="quantity" value="{{ p.quantity }}"> {{ p.unit }}</td>
+    <td>Rs {{ p.total_price }}</td>
+    <td><form id="u{{ p.product_id }}" method="post" action="{{ url_for('farmer_update', pid=p.product_id) }}"><button>Save</button></form></td>
+    <td><form class="inline" method="post" action="{{ url_for('farmer_delete', pid=p.product_id) }}"
+              onsubmit="return confirm('Remove this product?')"><button class="red">Delete</button></form></td>
+  </tr>
+  {% else %}<tr><td colspan="8">No products yet.</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Sales report</h2>
+<table>
+  <tr><th>Product</th><th>Quantity sold</th><th>Revenue (Rs)</th></tr>
+  {% for r in report %}
+  <tr><td>{{ r.product_name }}</td><td>{{ r.qty_sold }} {{ r.unit }}</td><td>{{ r.revenue }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

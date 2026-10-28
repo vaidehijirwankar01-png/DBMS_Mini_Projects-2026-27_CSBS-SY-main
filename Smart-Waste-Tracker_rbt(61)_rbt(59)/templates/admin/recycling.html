@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Recycling Management - Admin - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Recycling & Disposal Management</h3>
+        <p class="text-muted small mb-0">Track processing destinations, composting facilities, and environmental diversion</p>
+    </div>
+    <button class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#addRecyclingCard">
+        <i class="bi bi-plus-circle me-1"></i> Log Processing Event
+    </button>
+</div>
+
+<!-- Add Processing Event Form -->
+<div class="collapse mb-4" id="addRecyclingCard">
+    <div class="card border-0 shadow-sm rounded-3 p-4 bg-white border-top border-success border-4">
+        <h5 class="fw-bold mb-3">Record Waste Disposal / Recycling</h5>
+        <form method="POST" action="{{ url_for('admin.add_recycling_record') }}" class="row g-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Source Collection Request <span class="text-danger">*</span></label>
+                <select name="request_id" class="form-select" required>
+                    <option value="">Select collected request...</option>
+                    {% for er in eligible_requests %}
+                        <option value="{{ er.request_id }}">#{{ er.request_id }} - {{ er.citizen_name }} ({{ er.category_name }}, {{ er.actual_quantity_kg }} kg)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Processed Weight (kg) <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" name="quantity_kg" class="form-control" required placeholder="e.g. 15.5">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Processing Method <span class="text-danger">*</span></label>
+                <select name="processing_type" class="form-select" required>
+                    <option value="Recycling">Recycling</option>
+                    <option value="Composting">Composting</option>
+                    <option value="Special Treatment">Special Treatment (Hazardous)</option>
+                    <option value="Incineration">Incineration</option>
+                    <option value="Landfill">Landfill</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Destination Facility / Plant</label>
+                <input type="text" name="destination" class="form-control" placeholder="e.g. EcoRecycle Materials Recovery Facility">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Processing Notes</label>
+                <input type="text" name="notes" class="form-control" placeholder="Batch or facility notes...">
+            </div>
+            <div class="col-12 text-end">
+                <button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="collapse" data-bs-target="#addRecyclingCard">Cancel</button>
+                <button type="submit" class="btn btn-success fw-semibold">Record Processing</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Recycling Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+            <span class="text-muted small fw-semibold text-uppercase">Recycling Efficiency</span>
+            <h2 class="fw-bold text-success my-2">{{ stats.recycling_pct }}%</h2>
+            <small class="text-muted">Total collected waste diverted</small>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase mb-2 d-block">Breakdown by Disposal Method</span>
+            <div class="d-flex flex-wrap gap-4">
+                {% for b in breakdown %}
+                <div>
+                    <span class="fw-bold fs-5 text-dark">{{ b.total_kg | round(1) }} kg</span>
+                    <small class="text-muted d-block">{{ b.processing_type }} ({{ b.record_count }} batches)</small>
+                </div>
+                {% else %}
+                <span class="text-muted small">No processing breakdown available.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Records Table -->
+<div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Recycling ID</th>
+                    <th>Req #</th>
+                    <th>Processed Weight</th>
+                    <th>Method</th>
+                    <th>Destination Facility</th>
+                    <th>Processed Timestamp</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td class="fw-bold">#REC-{{ r.recycling_id }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.request_detail', request_id=r.request_id) }}" class="text-decoration-none fw-semibold">
+                            #{{ r.request_id }}
+                        </a>
+                    </td>
+                    <td class="fw-semibold text-success">{{ r.quantity_kg }} kg</td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            {{ r.processing_type }}
+                        </span>
+                    </td>
+                    <td>{{ r.destination or 'Municipal Recovery Center' }}</td>
+                    <td class="text-muted small">{{ r.processed_at | format_date('%d %b %Y %H:%M') }}</td>
+                    <td class="text-secondary small">{{ r.notes or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No recycling or disposal records logged yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

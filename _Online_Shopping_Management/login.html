@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Login & Registration - ShopDB</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      🛍️ <span>ShopDB</span> Prototype
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Shop</a>
+      <a href="orders.html">My Orders</a>
+      <a href="dashboard.html">Admin Dashboard</a>
+      <a href="login.html" class="active">Account</a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width: 800px;">
+    <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h3 style="margin-bottom: 4px;">Current Session:</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Active User: <strong id="activeUserInfo" style="color: var(--primary);">Test User (ID: 1)</strong>
+        </p>
+      </div>
+      <button class="btn btn-secondary" onclick="quickSwitchDemo()">⚡ Reset to Demo User #1</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+      <!-- Login Box -->
+      <div style="background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+        <h3 style="margin-bottom: 16px;">🔐 Customer Login</h3>
+        <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Email:</label>
+            <input type="email" id="loginEmail" required value="test@mail.com" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Password:</label>
+            <input type="password" id="loginPassword" required value="x" />
+            <small style="color: var(--text-muted);">Default seed account password is <code>x</code></small>
+          </div>
+          <button type="submit" class="btn" style="margin-top: 8px;">Login</button>
+        </form>
+      </div>
+
+      <!-- Registration Box -->
+      <div style="background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+        <h3 style="margin-bottom: 16px;">📝 Register New Customer</h3>
+        <form onsubmit="handleRegister(event)" style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Full Name:</label>
+            <input type="text" id="regName" required placeholder="e.g. John Doe" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Email:</label>
+            <input type="email" id="regEmail" required placeholder="john@example.com" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Phone:</label>
+            <input type="text" id="regPhone" placeholder="9876543210" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Password:</label>
+            <input type="password" id="regPassword" required placeholder="••••••••" />
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 600;">Address (Street & City):</label>
+            <input type="text" id="regStreet" placeholder="Street name / Flat" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <input type="text" id="regCity" placeholder="City" />
+            <input type="text" id="regPincode" placeholder="Pincode" />
+          </div>
+          <button type="submit" class="btn btn-success" style="margin-top: 8px;">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    function updateActiveUserDisplay() {
+      const id = localStorage.getItem('customer_id') || 1;
+      const name = localStorage.getItem('customer_name') || 'Test User';
+      document.getElementById('activeUserInfo').textContent = `${name} (ID: ${id})`;
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.background = isError ? '#ef4444' : '#1e293b';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function quickSwitchDemo() {
+      localStorage.setItem('customer_id', 1);
+      localStorage.setItem('customer_name', 'Test User');
+      updateActiveUserDisplay();
+      showToast('Switched to Test User #1');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('customer_id', data.customer_id);
+          localStorage.setItem('customer_name', data.name);
+          updateActiveUserDisplay();
+          showToast(`Welcome back, ${data.name}!`);
+          setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+        } else {
+          showToast(data.error || 'Login failed', true);
+        }
+      } catch (err) {
+        showToast('Login request failed', true);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const body = {
+        name: document.getElementById('regName').value,
+        email: document.getElementById('regEmail').value,
+        phone: document.getElementById('regPhone').value,
+        password: document.getElementById('regPassword').value,
+        street: document.getElementById('regStreet').value,
+        city: document.getElementById('regCity').value,
+        state: 'Maharashtra',
+        pincode: document.getElementById('regPincode').value
+      };
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('customer_id', data.customer_id);
+          localStorage.setItem('customer_name', data.name);
+          updateActiveUserDisplay();
+          showToast(`Account created! Customer ID: #${data.customer_id}`);
+          setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+        } else {
+          showToast(data.error || 'Registration failed', true);
+        }
+      } catch (err) {
+        showToast('Registration request failed', true);
+      }
+    }
+
+    updateActiveUserDisplay();
+  </script>
+</body>
+</html>

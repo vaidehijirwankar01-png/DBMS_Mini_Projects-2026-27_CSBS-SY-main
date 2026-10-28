@@ -1,0 +1,125 @@
+erDiagram
+    areas ||--o{ users : "locates"
+    areas ||--o{ collection_requests : "services"
+    
+    users ||--o{ collection_requests : "creates"
+    users ||--o| workers : "employed_as"
+    users ||--o{ assignments : "assigns"
+    users ||--o{ segregation_records : "records"
+    users ||--o{ feedback : "submits"
+    users ||--o{ collection_status_history : "modifies"
+    
+    waste_categories ||--o{ collection_requests : "categorizes"
+    waste_categories ||--o{ segregation_records : "classified_as"
+    
+    workers ||--o{ assignments : "undertakes"
+    
+    collection_requests ||--o{ assignments : "assigned_via"
+    collection_requests ||--o{ segregation_records : "segregated_into"
+    collection_requests ||--o{ recycling_records : "processed_via"
+    collection_requests ||--o{ feedback : "rated_with"
+    collection_requests ||--o{ collection_status_history : "tracked_by"
+
+    areas {
+        int area_id PK
+        string area_name
+        string locality
+        string postal_code
+        timestamp created_at
+    }
+
+    waste_categories {
+        int category_id PK
+        string category_name UK
+        string description
+        string segregation_instructions
+        string color_code
+    }
+
+    users {
+        int user_id PK
+        string full_name
+        string email UK
+        string password_hash
+        string phone
+        enum role
+        int area_id FK
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    workers {
+        int worker_id PK
+        int user_id FK,UK
+        enum availability_status
+        date joining_date
+        int total_collections
+    }
+
+    collection_requests {
+        int request_id PK
+        int citizen_id FK
+        int category_id FK
+        int area_id FK
+        decimal estimated_quantity_kg
+        decimal actual_quantity_kg
+        string pickup_address
+        date preferred_date
+        enum status
+        string notes
+        timestamp created_at
+        timestamp updated_at
+        datetime completed_at
+    }
+
+    assignments {
+        int assignment_id PK
+        int request_id FK
+        int worker_id FK
+        int assigned_by FK
+        timestamp assigned_at
+        enum assignment_status
+    }
+
+    segregation_records {
+        int segregation_id PK
+        int request_id FK
+        int category_id FK
+        decimal quantity_kg
+        boolean is_correctly_segregated
+        enum segregation_status
+        int recorded_by FK
+        timestamp recorded_at
+        string remarks
+    }
+
+    recycling_records {
+        int recycling_id PK
+        int request_id FK
+        decimal quantity_kg
+        enum processing_type
+        string destination
+        timestamp processed_at
+        string notes
+    }
+
+    feedback {
+        int feedback_id PK
+        int request_id FK
+        int citizen_id FK
+        int rating
+        string comments
+        timestamp submitted_at
+    }
+
+    collection_status_history {
+        int history_id PK
+        int request_id FK
+        string previous_status
+        string new_status
+        int changed_by FK
+        timestamp changed_at
+        string remarks
+    }
+

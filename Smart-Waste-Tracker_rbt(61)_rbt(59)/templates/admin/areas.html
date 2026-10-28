@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Service Areas - Admin - WasteTracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Geographic Service Areas</h3>
+        <p class="text-muted small mb-0">Manage waste collection zones and routing sectors</p>
+    </div>
+    <button class="btn btn-success" data-bs-toggle="collapse" data-bs-target="#addAreaCard">
+        <i class="bi bi-plus-circle me-1"></i> Add Service Area
+    </button>
+</div>
+
+<!-- Add Area Collapse Form -->
+<div class="collapse mb-4" id="addAreaCard">
+    <div class="card border-0 shadow-sm rounded-3 p-4 bg-white border-top border-success border-4">
+        <h5 class="fw-bold mb-3">Register New Service Area</h5>
+        <form method="POST" action="{{ url_for('admin.add_area') }}" class="row g-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Area Name <span class="text-danger">*</span></label>
+                <input type="text" name="area_name" class="form-control" required placeholder="e.g. Green Valley Sector 4">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Locality / Landmark</label>
+                <input type="text" name="locality" class="form-control" placeholder="e.g. Near Central Park">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Postal / PIN Code <span class="text-danger">*</span></label>
+                <input type="text" name="postal_code" class="form-control" required placeholder="e.g. 560001">
+            </div>
+            <div class="col-12 text-end">
+                <button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="collapse" data-bs-target="#addAreaCard">Cancel</button>
+                <button type="submit" class="btn btn-success fw-semibold">Save Area</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Areas Table -->
+<div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Area ID</th>
+                    <th>Area Name</th>
+                    <th>Locality / Neighborhood</th>
+                    <th>Postal Code</th>
+                    <th>Collection Requests Count</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in areas %}
+                <tr>
+                    <td class="fw-bold">#{{ a.area_id }}</td>
+                    <td class="fw-semibold text-dark">{{ a.area_name }}</td>
+                    <td>{{ a.locality or 'General Sector' }}</td>
+                    <td><code>{{ a.postal_code }}</code></td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ a.request_count }} pickups</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal{{ a.area_id }}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal{{ a.area_id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST" action="{{ url_for('admin.edit_area', area_id=a.area_id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Edit Area #{{ a.area_id }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Area Name</label>
+                                        <input type="text" name="area_name" class="form-control" value="{{ a.area_name }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Locality</label>
+                                        <input type="text" name="locality" class="form-control" value="{{ a.locality or '' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Postal Code</label>
+                                        <input type="text" name="postal_code" class="form-control" value="{{ a.postal_code }}" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-success">Update Area</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No service areas registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

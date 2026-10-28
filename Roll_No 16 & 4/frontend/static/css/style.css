@@ -1,0 +1,235 @@
+/* =============================================================================
+   COLLEGE MANAGEMENT SYSTEM — CUSTOM STYLESHEET
+   Theme: Academic Modern Blue, Crisp White, Slate Light Gray
+   ============================================================================= */
+
+:root {
+    --primary-color: #1e3a8a;       /* Deep Navy Blue */
+    --primary-light: #3b82f6;       /* Bright Royal Blue */
+    --primary-hover: #1d4ed8;       /* Hover Blue */
+    --secondary-color: #0f172a;     /* Slate Dark */
+    --bg-light: #f8fafc;            /* Crisp Light Gray Canvas */
+    --card-bg: #ffffff;             /* Pure White */
+    --border-color: #e2e8f0;        /* Soft Border */
+    --text-main: #1e293b;           /* Slate 800 */
+    --text-muted: #64748b;          /* Slate 500 */
+    --sidebar-width: 260px;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar Navigation */
+.app-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background: #0f2744;
+    color: #e2e8f0;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-brand {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.sidebar-brand i {
+    color: #60a5fa;
+    font-size: 1.4rem;
+}
+
+.nav-section-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    padding: 1rem 1.25rem 0.4rem;
+    font-weight: 600;
+}
+
+.sidebar .nav-link {
+    color: #cbd5e1;
+    padding: 0.65rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    padding-left: 1.45rem;
+}
+
+.sidebar .nav-link.active {
+    color: #ffffff;
+    background: #2563eb;
+    font-weight: 600;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.1rem;
+    width: 22px;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.top-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.85rem 1.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.page-container {
+    padding: 1.75rem;
+    flex: 1;
+}
+
+/* Cards & Statistics */
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.card {
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+/* Tables */
+.table-responsive {
+    border-radius: 8px;
+}
+
+.table th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--border-color);
+    padding: 0.85rem 1rem;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+    font-size: 0.92rem;
+    color: #1e293b;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Badges */
+.badge {
+    padding: 0.4em 0.7em;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+}
+
+/* SQL Query Display Box */
+.sql-box {
+    background: #0f172a;
+    color: #38bdf8;
+    border-radius: 8px;
+    padding: 1.2rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    position: relative;
+    border: 1px solid #1e293b;
+}
+
+.sql-badge {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.75rem;
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Footer */
+.app-footer {
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
+    padding: 1rem 1.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
